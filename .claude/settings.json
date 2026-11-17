@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "ask": [
+      "Edit(/Config/**)",
+      "Edit(/*.uproject)"
+    ],
+    "deny": [
+      "Edit(/Content/**)",
+      "Edit(/Binaries/**)",
+      "Edit(/Intermediate/**)",
+      "Bash(git commit *)",
+      "Bash(git push *)"
+    ]
+  }
+}
