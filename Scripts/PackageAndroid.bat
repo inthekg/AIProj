@@ -9,7 +9,8 @@ REM                         -clientconfig comes from the first argument instead 
 REM If C++ changed, run Build.bat first: -skipbuildeditor does not rebuild the editor DLLs used for cooking.
 set UE_ROOT=D:\UE_5.5
 for %%I in ("%~dp0..") do set "PROJECT=%%~fI\AIGame.uproject"
-set ARCHIVE_DIR=C:\Users\qkdtm\Desktop\App
+REM Output folder: ProjectRoot\Archive (resolved to an absolute path at run time; ignored by git).
+for %%I in ("%~dp0..\Archive") do set "ARCHIVE_DIR=%%~fI"
 set CONFIG=Development
 if not "%~1"=="" set "CONFIG=%~1"
 if /I "%CONFIG%"=="Development" set CONFIG=Development& goto :config_ok

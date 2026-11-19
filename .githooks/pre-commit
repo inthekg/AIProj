@@ -1,0 +1,23 @@
+#!/bin/sh
+# 커밋에 들어갈 텍스트 파일이 UTF-8인지 검사한다 (CP949 등 혼입 차단)
+# 작업 폴더가 아니라 '스테이징된 내용'을 검사해야 실제 커밋 내용과 일치한다
+
+# iconv가 없으면 모든 파일이 실패로 보이므로 먼저 확인한다
+if ! command -v iconv > /dev/null 2>&1; then
+  echo "[pre-commit] iconv를 찾을 수 없습니다. Git for Windows(Git Bash) 환경인지 확인하세요." >&2
+  exit 1
+fi
+
+# 한글 파일명이 이스케이프되지 않도록 quotepath를 끈다
+bad=$(git -c core.quotepath=off diff --cached --name-only --diff-filter=ACMR -- \
+        '*.h' '*.cpp' '*.cs' '*.md' '*.csv' '*.bat' |
+      while IFS= read -r f; do
+        git show ":$f" | iconv -f UTF-8 -t UTF-8 > /dev/null 2>&1 || printf '%s\n' "$f"
+      done)
+
+if [ -n "$bad" ]; then
+  echo "[pre-commit] UTF-8이 아닌 파일이 있어 커밋을 중단합니다. UTF-8로 다시 저장한 뒤 커밋하세요:" >&2
+  printf '%s\n' "$bad" | sed 's/^/  - /' >&2
+  exit 1
+fi
+exit 0

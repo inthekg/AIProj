@@ -1,0 +1,8 @@
+---,DisplayName,UnlockOrder,UnlockCost,Cost,Price,OrderWeight,RentIncrease
+RedBean,팥,0,0,3,10,10,0
+Strawberry,딸기,1,40,5,12,10,0
+Blueberry,블루베리,2,70,9,15,10,0
+Yogurt,요거트,3,130,15,22,10,200
+Pineapple,파인애플,4,210,17,24,10,100
+Mango,망고,5,300,21,28,10,0
+DubaiChoco,두바이초코,6,450,29,40,10,150

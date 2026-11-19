@@ -270,4 +270,9 @@ fabric.properties
 .claude/settings.local.json
 CLAUDE.local.md
 
+### Build output ###
+# APK archive folder written by Scripts/PackageAndroid.bat
+/Archive/
+
 # End of https://www.toptal.com/developers/gitignore/api/windows,unrealengine,androidstudio,c++
+docs/02_design/adr/
