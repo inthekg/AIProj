@@ -12,7 +12,7 @@
 - Unreal Engine 5.5. 다른 버전 API를 쓰지 않는다
 - 엔진 소스(선언 확인용): D:/UE_5.5/Engine/Source, D:/UE_5.5/Engine/Plugins
 - 타깃: Android arm64 (Development / Shipping). 개발은 Windows 에디터에서 한다
-- 컴파일: Scripts/Build.bat  /  패키징: Scripts/PackageAndroid.bat [Development|Shipping] (기본 Development)
+- 컴파일: Scripts/Build.bat  /  자동화 테스트: Scripts/RunTests.bat [필터, 기본 AIGame]  /  패키징: Scripts/PackageAndroid.bat [Development|Shipping] (기본 Development)
 - 빌드·패키징은 요청받았을 때만 실행하고, 위 배치 파일만 쓴다 (엔진의 Build.bat·RunUAT를 직접 호출하지 않는다)
 - Build.bat 실행 전에 에디터가 켜져 있는지 묻는다 (Live Coding이 켜져 있으면 외부 빌드가 거부됨)
 - 패키징을 요청받으면 Source/ 아래 파일이 Binaries/Win64/UnrealEditor-AIGame.dll보다 최근에 수정됐는지 확인하고, 그렇다면 Build.bat을 먼저 실행할지 묻는다 
@@ -24,6 +24,8 @@
   - 이 프로젝트에서 처음 쓰는 엔진 API와 그 선언이 있는 엔진 헤더 경로 (엔진 기능 환각 대비) 
   - 추가할 Build.cs 의존 모듈
   - 검증 방법 (컴파일, PIE 시나리오, 실기기 확인 항목)
+- 태스크를 시작하면 tasks.md의 해당 행과, 그 행이 가리키는 architecture.md 절 · ADR부터 읽는다. 문서를 처음부터 통째로 읽지 말고 필요한 절을 찾아 읽는다
+- 계획의 새 함수 · 상태 · 값 · 순서 · 예외 처리마다 근거(architecture.md 절 · ADR · GDD 항목)를 단다. 근거를 달 수 없으면 그 이름 · 키워드로 docs/를 검색하고 architecture.md 추적표에서 관련 규칙을 찾아 더 읽는다. 처음 범위 밖에서 더 읽은 절은 이유와 함께 계획 · 보고에 적는다
 - 한 번에 태스크 하나만 다룬다. 범위 밖 파일은 수정하지 않는다
 - git commit / push는 하지 않는다. 사람이 diff를 리뷰한 뒤 커밋한다
 - 태스크를 마치면 다음 순서로 보고한다
@@ -32,6 +34,7 @@
   - '확인 필요'로 남긴 것
   - 사람이 확인·작업할 항목 (PIE·실기기 확인, BP·UMG·에셋 작업, DataTable 재임포트)
 - 태스크를 마치면 docs/ai-log/log.md 표에 한 줄 초안을 추가한다. 판정·근거 칸은 비워 두고 사람이 채운다. 커밋 칸은 세션 정보만 적는다
+- 컨텍스트를 압축할 때는 태스크 ID, 승인된 계획, 수정한 파일 목록, '확인 필요' 항목을 남긴다
 
 ## 근거와 보고
 - 처음 쓰는 엔진 API의 선언을 엔진 소스에서 찾지 못하면 쓰지 않고 '확인 필요'로 보고한다
