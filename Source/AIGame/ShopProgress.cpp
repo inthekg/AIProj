@@ -2,7 +2,7 @@
 
 FShopProgress FShopProgress::MakeNew(int32 StartGold)
 {
-	// 시작 조건(1일차 · 기본 재료만 · 찜기 1레벨, GDD 하루 진행)의 원본은 멤버 기본값이다. 데이터에서 오는 값은 StartGold뿐이다
+	// 시작 조건(GDD 하루 진행)의 원본은 멤버 기본값이다. 데이터에서 오는 값은 StartGold뿐이다
 	FShopProgress Progress;
 	Progress.Gold = StartGold;
 	return Progress;
@@ -23,8 +23,7 @@ bool FShopProgress::TrySpend(int32 Cost)
 
 EDayOutcome FShopProgress::ApplyDayResult(const FDayResult& Result)
 {
-	// 순서 중요: '전날 빚'은 이번 순이익을 더하기 전 Gold로 판정한다(ADR-0016 — 전날 결산 기준).
-	// 영업 중 임대료로 생긴 빚은 아직 Gold에 없으므로 '전날 빚'으로 잡히지 않는다
+	// 순서 중요: '전날 빚'은 이번 순이익을 더하기 전 Gold로 판정한다(ADR-0016)
 	const bool bWasInDebt = Gold < 0;
 	Gold += Result.Sales - Result.IngredientCost - Result.Rent;
 	if (bWasInDebt && Gold < 0)
