@@ -11,7 +11,6 @@ FShopProgress FShopProgress::MakeNew(int32 StartGold)
 bool FShopProgress::TrySpend(int32 Cost)
 {
 	// 음수 비용은 빚인 상태에서도 구매를 성공시키고 Gold를 늘린다. 데이터 검증(입력 경계)과 별도로 여기서도 막는다(T02 사용자 결정)
-	// TODO(T03): data-schema.md '데이터 검증'에 구매 비용 > 0 검사를 추가한다(UnlockOrder ≥ 1의 UnlockCost, 레벨 2 이상의 UpgradeCost)
 	check(Cost > 0);
 	if (Gold < Cost)
 	{
