@@ -269,6 +269,7 @@ flowchart LR
 | `Private/Tests/BusinessSimTests.cpp` · `Private/Tests/ShopProgressTests.cpp` | 자동화 테스트(ADR-0007) |
 - 파일은 모듈 폴더 바로 아래에 둔다(지금 모듈 구조와 같음) [AI 판단].
 - Build.cs: 추가 모듈 없음. 쓰는 기능(DataTable · GameplayStatics · SaveGame · TimerManager · Texture2D)이 모두 `Engine` 모듈이다.
+- Build.cs: `PrivateIncludePaths.Add(ModuleDirectory)` (T02 사용자 결정). `Private/Tests`의 테스트가 모듈 루트 헤더를 `"ShopProgress.h"`처럼 이름만으로 include한다. `BuildSettingsVersion.V5`에서는 모듈 루트가 기본 탐색 경로에 없다(UBT `ModuleRules.cs` 1418행 · `UEBuildModuleCPP.cs` 259행). `"AIGame/ShopProgress.h"`(UBT가 넣는 `Source` 경로)는 경로인지 모듈 이름인지 헷갈려서 쓰지 않는다.
 
 ### 3.2 공용 타입 — ShopTypes.h
 ```cpp
@@ -497,7 +498,10 @@ struct FShopProgress
 	/** 새 게임(1일차 · 기본 재료 · 찜기 1레벨). 앱 첫 실행과 게임 오버 때 쓴다 */
 	static FShopProgress MakeNew(int32 StartGold);
 
-	/** Gold ≥ Cost면 차감하고 true, 아니면 아무것도 바꾸지 않고 false. 로비 구매 전용 — 빚은 재료비 · 임대료로만 생긴다(GDD · ADR-0016) */
+	/**
+	 * Gold ≥ Cost면 차감하고 true, 아니면 아무것도 바꾸지 않고 false. 로비 구매 전용 — 빚은 재료비 · 임대료로만 생긴다(GDD · ADR-0016).
+	 * 전제: Cost > 0 (check). 구매 비용이 양수인지는 UShopGameInstance의 데이터 검증이 먼저 확인한다.
+	 */
 	bool TrySpend(int32 Cost);
 
 	/**
@@ -510,6 +514,7 @@ struct FShopProgress
 	EDayOutcome ApplyDayResult(const FDayResult& Result);
 };
 ```
+- `TrySpend`의 `check(Cost > 0)` (T02 사용자 결정): 음수 비용은 빚인 상태에서도 구매를 성공시키고 Gold를 늘린다. 입력 경계의 데이터 검증(3.5 `Init`, data-schema.md '데이터 검증' — T03에서 추가)과 함께 둔다.
 
 ### 3.4 UShopSaveGame — ShopSaveGame.h
 ```cpp

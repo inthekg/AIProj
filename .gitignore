@@ -276,3 +276,8 @@ CLAUDE.local.md
 
 # End of https://www.toptal.com/developers/gitignore/api/windows,unrealengine,androidstudio,c++
 docs/02_design/adr/
+
+### Study ###
+# 학습용 스킬과 학습 문서는 Git에서 제외
+/STUDY/
+.claude/skills/study/

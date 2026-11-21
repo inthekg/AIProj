@@ -3,4 +3,6 @@
 #include "AIGame.h"
 #include "Modules/ModuleManager.h"
 
+DEFINE_LOG_CATEGORY(LogAIGame);
+
 IMPLEMENT_PRIMARY_GAME_MODULE( FDefaultGameModuleImpl, AIGame, "AIGame" );
