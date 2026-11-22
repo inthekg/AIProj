@@ -116,10 +116,13 @@ void ABusinessGameMode::HandleChanges(EBusinessChange Changes)
 	}
 	if (EnumHasAnyFlags(Changes, EBusinessChange::Shelf))
 	{
+		UE_LOG(LogAIGame, Log, TEXT("Shelf changed. Now=%.2f Entries=%d"), Now, Sim.GetShelf().Num());
 		OnShelfChanged.Broadcast();
 	}
 	if (EnumHasAnyFlags(Changes, EBusinessChange::Gold))
 	{
+		UE_LOG(LogAIGame, Log, TEXT("Gold changed. Now=%.2f Sales=%d Sold=%d Gold=%d"),
+			Now, Sim.GetResult().Sales, Sim.GetResult().SoldCount, Sim.GetCurrentGold());
 		OnGoldChanged.Broadcast(Sim.GetCurrentGold());
 	}
 
@@ -129,8 +132,9 @@ void ABusinessGameMode::HandleChanges(EBusinessChange Changes)
 
 		const FDayResult& Result = Sim.GetResult();
 		const EDayOutcome Outcome = GetGameInstance<UShopGameInstance>()->ApplyDayResult(Result);
-		UE_LOG(LogAIGame, Log, TEXT("Day ended. Now=%.2f Sales=%d IngredientCost=%d Rent=%d Missed=%d Outcome=%s"),
-			Now, Result.Sales, Result.IngredientCost, Result.Rent, Result.MissedCustomers,
+		UE_LOG(LogAIGame, Log, TEXT("Day ended. Now=%.2f Sales=%d IngredientCost=%d Rent=%d Sold=%d Missed=%d Trash=%d Discard=%d Outcome=%s"),
+			Now, Result.Sales, Result.IngredientCost, Result.Rent, Result.SoldCount, Result.MissedCustomers,
+			Result.TrashCount, Result.DiscardCount,
 			*StaticEnum<EDayOutcome>()->GetNameStringByValue(static_cast<int64>(Outcome)));
 		// 순서 중요: 진행 값 반영 · 저장이 끝난 뒤 알린다
 		OnDayEnded.Broadcast(Result, Outcome);

@@ -17,6 +17,9 @@ void UShopGameInstance::Init()
 	const FBalanceRow Balance = GetBalance();
 	checkf(Balance.BaseRent < Balance.StartGold,
 		TEXT("Balance: BaseRent (%d) must be less than StartGold (%d)"), Balance.BaseRent, Balance.StartGold);
+	// FBusinessSim 배분이 진열대 새 칸을 개수 1로 넣는 전제(T13 사용자 결정)
+	checkf(Balance.MaxStockPerRecipe >= 1,
+		TEXT("Balance: MaxStockPerRecipe (%d) must be >= 1"), Balance.MaxStockPerRecipe);
 
 	TArray<int32> UnlockOrders;
 	for (const EIngredient& Ingredient : TEnumRange<EIngredient>())

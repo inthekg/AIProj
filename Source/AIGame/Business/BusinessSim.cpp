@@ -22,6 +22,7 @@ EBusinessChange FBusinessSim::StartDay(const FBusinessDayInput& InInput, double 
 	InputLockEndTime = 0.0;
 	SteamerGauge = Input.Steamer.MaxGauge;
 	SteamerRefillEndTime = 0.0;
+	Shelf.Reset();
 	Result = FDayResult();
 
 	Result.Rent = Input.Balance.BaseRent;
@@ -263,6 +264,51 @@ EBusinessChange FBusinessSim::ProcessDueEvents(double Now)
 				}
 			}
 
+			// 순서 중요: 재고 확인이 대기열 상한 검사보다 먼저다
+			int32 ShelfIndex = INDEX_NONE;
+			if (Customer.bAnyOrder)
+			{
+				if (!Shelf.IsEmpty())
+				{
+					// D12: 진열된 모찌 하나하나가 같은 확률(개수 비례). 주문 가중치와 같은 누적 방식으로 칸을 고른다
+					int32 StockSum = 0;
+					for (const FShelfEntry& Entry : Shelf)
+					{
+						StockSum += Entry.Count;
+					}
+					int32 StockRoll = Random.RandRange(0, StockSum - 1);
+					for (ShelfIndex = 0; ShelfIndex < Shelf.Num(); ++ShelfIndex)
+					{
+						StockRoll -= Shelf[ShelfIndex].Count;
+						if (StockRoll < 0)
+						{
+							break;
+						}
+					}
+				}
+			}
+			else
+			{
+				//진열대에 이미 있는가
+				ShelfIndex = Shelf.IndexOfByPredicate([&Customer](const FShelfEntry& Entry)
+				{
+					return Entry.Recipe == Customer.Order;
+				});
+			}
+
+			if (ShelfIndex != INDEX_NONE)
+			{
+				// 순서 중요: 칸을 빼기 전에 그 칸의 조합으로 판다. 손님 대기열에 들어가지 않으므로 ID · 외형 · 만료 이벤트가 없다
+				Sell(Shelf[ShelfIndex].Recipe, INDEX_NONE);
+				--Shelf[ShelfIndex].Count;
+				if (Shelf[ShelfIndex].Count == 0)
+				{
+					Shelf.RemoveAt(ShelfIndex);
+				}
+				Changes |= EBusinessChange::Shelf | EBusinessChange::Gold;
+				continue;
+			}
+
 			if (WaitingCustomers.Num() >= Input.Day.MaxQueue)
 			{
 				continue;
@@ -299,12 +345,62 @@ EBusinessChange FBusinessSim::ProcessDueEvents(double Now)
 			Changes |= EBusinessChange::Steamer;
 			continue;
 		case EBusinessEventType::WorkbenchDone:
-			// TODO(T13): Wrapping이면 배분(손님 → 진열대 → 폐기, architecture.md 1.10 · 3.6)
+			// 순서 중요: 배분이 WorkbenchRecipe를 읽으므로 ClearWorkbench보다 먼저다.
+			if (WorkbenchState == EWorkbenchState::Wrapping)
+			{
+				const int32 WaitingIndex = WaitingCustomers.IndexOfByPredicate([this](const FCustomer& Waiting)
+				{
+					return Waiting.bAnyOrder || Waiting.Order == WorkbenchRecipe;
+				});
+
+				//원하는 손님이 존재
+				if (WaitingIndex != INDEX_NONE)
+				{
+					Sell(WorkbenchRecipe, WaitingIndex);
+					Changes |= EBusinessChange::Customers | EBusinessChange::Gold;
+				}
+				//진열대 배치
+				else
+				{
+					const int32 ShelfIndex = Shelf.IndexOfByPredicate([this](const FShelfEntry& Entry)
+					{
+						return Entry.Recipe == WorkbenchRecipe;
+					});
+					if (ShelfIndex == INDEX_NONE)
+					{
+						FShelfEntry NewEntry;
+						NewEntry.Recipe = WorkbenchRecipe;
+						NewEntry.Count = 1;
+						Shelf.Add(NewEntry);
+						Changes |= EBusinessChange::Shelf;
+					}
+					else if (Shelf[ShelfIndex].Count < Input.Balance.MaxStockPerRecipe)
+					{
+						++Shelf[ShelfIndex].Count;
+						Changes |= EBusinessChange::Shelf;
+					}
+					else
+					{
+						// ADR-0011: 진열대 상한이면 폐기.
+						++Result.DiscardCount;
+					}
+				}
+			}
 			ClearWorkbench();
 			Changes |= EBusinessChange::Workbench;
 			continue;
 		case EBusinessEventType::DayEnd:
-			// TODO(T13): 진열 개수 · 작업대를 폐기 수에 더하고 진열대 비우기
+			// GDD 하루 진행: 남은 재고와 작업대 위 재료는 폐기한다. 순서 중요: 진열대 · 작업대를 비우기 전에 센다
+			for (const FShelfEntry& Entry : Shelf)
+			{
+				Result.DiscardCount += Entry.Count;
+			}
+			
+			if (WorkbenchState != EWorkbenchState::Empty && WorkbenchState != EWorkbenchState::Trash)
+			{
+				++Result.DiscardCount;
+			}
+			Shelf.Reset();
 			WaitingCustomers.Reset();
 			// 작업대를 되돌리지 않으면 감싸기 연출이 다시 재생된다(architecture.md 4.7 F1)
 			ClearWorkbench();
@@ -337,6 +433,25 @@ void FBusinessSim::PushEvent(double Time, EBusinessEventType Type, int32 Custome
 	Event.CustomerId = CustomerId;
 	EventHeap.HeapPush(Event);
 	++NextEventSeq;
+}
+
+void FBusinessSim::Sell(const FRecipe& Recipe, int32 WaitingIndex)
+{
+	const int32 BasePrice = Input.Ingredients.FindChecked(Recipe.Base).Price;
+	if (Recipe.Fruit == EIngredient::None)
+	{
+		Result.Sales += BasePrice;
+	}
+	else
+	{
+		const int32 FruitPrice = Input.Ingredients.FindChecked(Recipe.Fruit).Price;
+		Result.Sales += FMath::RoundToInt((BasePrice + FruitPrice) * Input.Balance.MixMultiplier);
+	}
+	++Result.SoldCount;
+	if (WaitingIndex != INDEX_NONE)
+	{
+		WaitingCustomers.RemoveAt(WaitingIndex);
+	}
 }
 
 void FBusinessSim::ClearWorkbench()

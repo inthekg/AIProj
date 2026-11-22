@@ -89,6 +89,7 @@ public:
 	static EWorkbenchState NextWorkbenchState(EWorkbenchState Current, EWorkbenchInput WorkbenchInput);
 
 	const TArray<FCustomer>& GetWaitingCustomers() const { return WaitingCustomers; }
+	const TArray<FShelfEntry>& GetShelf() const { return Shelf; }
 	EWorkbenchState GetWorkbenchState() const { return WorkbenchState; }
 	const FRecipe& GetWorkbenchRecipe() const { return WorkbenchRecipe; }
 	int32 GetSteamerGauge() const { return SteamerGauge; }
@@ -127,6 +128,9 @@ private:
 	/** 월드 시간(초). 다시 찌는 중이 아니면 0 */
 	double SteamerRefillEndTime = 0.0;
 
+	/**진열대 배열 순서 = 처음 진열된 순서 = 화면 칸 순서(ADR-0012) */
+	TArray<FShelfEntry> Shelf;
+
 	FDayResult Result;
 
 	/** 월드 시간(초). 화면의 남은 시간 계산용 원본 시각 */
@@ -135,9 +139,9 @@ private:
 private:
 	void PushEvent(double Time, EBusinessEventType Type, int32 CustomerId = 0);
 
-	/** 작업대를 Empty로 되돌리고 레시피를 비운다 */
-	void ClearWorkbench();
+	/** 판매가를 매출에, 판매 수 +1. WaitingIndex가 INDEX_NONE이 아니면 그 손님을 대기열에서 뺀다 */
+	void Sell(const FRecipe& Recipe, int32 WaitingIndex);
 
-	/** 작업대를 쓰레기로 바꾸고 쓰레기 수 +1 · TrashTime 동안 입력 잠금 · WorkbenchDone 예약을 함께 한다. */
+	void ClearWorkbench();
 	void TrashWorkbench(double Now);
 };

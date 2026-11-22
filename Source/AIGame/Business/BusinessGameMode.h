@@ -29,6 +29,7 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FOnBusinessChanged OnSteamerChanged;
 
+	/** 진열대가 바뀜. 칸 i ← GetShelf()[i] */
 	UPROPERTY(BlueprintAssignable)
 	FOnBusinessChanged OnShelfChanged;
 
@@ -59,6 +60,9 @@ public:
 	TArray<FCustomer> GetWaitingCustomers() const { return Sim.GetWaitingCustomers(); }
 
 	UFUNCTION(BlueprintPure)
+	TArray<FShelfEntry> GetShelf() const { return Sim.GetShelf(); }
+
+	UFUNCTION(BlueprintPure)
 	FRecipe GetWorkbenchRecipe() const { return Sim.GetWorkbenchRecipe(); }
 
 	UFUNCTION(BlueprintPure)
@@ -85,8 +89,6 @@ public:
 
 	UFUNCTION(BlueprintPure)
 	int32 GetCurrentGold() const { return Sim.GetCurrentGold(); }
-
-	// TODO(T13): GetShelf, OnShelfChanged 툴팁에 "칸 i ← GetShelf()[i]"
 
 protected:
 	/** BP BeginPlay(위젯 생성 · 구독)를 먼저 실행한 뒤 하루를 시작한다. 그래서 첫 알림을 위젯이 받는다 */

@@ -21,13 +21,16 @@ static FBusinessDayInput MakeSimDayInput()
 	Input.Steamer.RegenTime = 6.f;
 	Input.Balance.RiceCakeCost = 2;
 	Input.Balance.NoFruitWeight = 8;
+	Input.Balance.MixMultiplier = 1.25f;
 	Input.Balance.PlaceTime = 0.2f;
 	Input.Balance.WrapTime = 0.6f;
 	Input.Balance.TrashTime = 0.5f;
+	Input.Balance.MaxStockPerRecipe = 5;
 	Input.Balance.BaseRent = 50;
 
 	FIngredientRow RedBean;
 	RedBean.Cost = 3;
+	RedBean.Price = 10;
 	RedBean.OrderWeight = 10;
 	Input.Ingredients.Add(EIngredient::RedBean, RedBean);
 
@@ -55,6 +58,19 @@ static TArray<FCustomer> CollectSimCustomers(const FBusinessDayInput& Input)
 		}
 	}
 	return Customers;
+}
+
+// 베이스 → 과일(None이면 건너뜀) → 찜기를 StartTime · +1 · +2에 탭하고, 감싸기가 끝난 뒤인 +3에 ProcessDueEvents를 부른다. 그 변화 플래그를 돌려준다
+// 1초 간격은 잠금(PlaceTime 0.2 · WrapTime 0.6)보다 길다. 찜기 게이지를 1 쓰므로 여러 개를 연달아 만드는 테스트는 MaxGauge를 늘린다
+static EBusinessChange MakeSimProduct(FBusinessSim& Sim, EIngredient Base, EIngredient Fruit, double StartTime)
+{
+	Sim.TapIngredient(Base, StartTime);
+	if (Fruit != EIngredient::None)
+	{
+		Sim.TapIngredient(Fruit, StartTime + 1.0);
+	}
+	Sim.TapSteamer(StartTime + 2.0);
+	return Sim.ProcessDueEvents(StartTime + 3.0);
 }
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FBusinessSimDayEndAtDurationTest, "AIGame.BusinessSim.DayEnd.AtDuration",
@@ -816,6 +832,530 @@ bool FBusinessSimSteamerRefillTest::RunTest(const FString& Parameters)
 	Sim.ProcessDueEvents(180.0);
 	TestTrue(TEXT("Day over"), Sim.IsDayOver());
 	TestEqual(TEXT("Day end: not refilling"), Sim.GetSteamerRefillEndTime(), 0.0);
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FBusinessSimCustomerServedNotExpiredTest, "AIGame.BusinessSim.Customer.ServedNotExpired",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+
+bool FBusinessSimCustomerServedNotExpiredTest::RunTest(const FString& Parameters)
+{
+	// R17 · D2 (GDD 손님, ADR-0004). 판매된 손님의 만료 이벤트는 힙에 남았다가 꺼낼 때 버려진다(지연 삭제 — architecture.md 4.1 '알림 없음')
+	// 입력: 도착 간격 50초 고정, 인내심 25(Days.csv 1일차), "아무거나" 0 → 손님1 도착 50 · 주문 팥 · 만료 75, 다음 도착 100
+	FBusinessDayInput Input = MakeSimDayInput();
+	Input.Day.ArrivalMin = 50.f;
+	Input.Day.ArrivalMax = 50.f;
+	Input.Day.AnyOrderRate = 0.f;
+
+	FBusinessSim Sim;
+	Sim.StartDay(Input, 0.0);
+	Sim.ProcessDueEvents(50.0);
+	TestEqual(TEXT("Arrived"), Sim.GetWaitingCustomers().Num(), 1);
+
+	// 팥 완성(53.6) → 손님1에게 판매. 팥 판매가 10(Ingredients.csv)
+	MakeSimProduct(Sim, EIngredient::RedBean, EIngredient::None, 51.0);
+	TestEqual(TEXT("Served: left queue"), Sim.GetWaitingCustomers().Num(), 0);
+	TestEqual(TEXT("Served: sales"), Sim.GetResult().Sales, 10);
+	TestEqual(TEXT("Served: sold"), Sim.GetResult().SoldCount, 1);
+	const TOptional<double> NextEventTime = Sim.GetNextEventTime();
+	TestTrue(TEXT("Served: expire event still in heap"), NextEventTime.IsSet() && NextEventTime.GetValue() == 75.0);
+
+	// 경계: 만료 시각과 같은 Now. 만료 이벤트를 꺼내지만 그 손님이 대기열에 없으므로 버린다
+	const EBusinessChange ExpireChanges = Sim.ProcessDueEvents(75.0);
+	TestTrue(TEXT("Expire of served customer: no change"), ExpireChanges == EBusinessChange::None);
+	TestEqual(TEXT("Expire of served customer: not missed"), Sim.GetResult().MissedCustomers, 0);
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FBusinessSimDistributeFirstMatchingTest, "AIGame.BusinessSim.Distribute.FirstMatching",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+
+bool FBusinessSimDistributeFirstMatchingTest::RunTest(const FString& Parameters)
+{
+	// R23 · D3 (GDD 제작 완성품 배분 · 기술 포인트 3, ADR-0006). 도착 순 대기열을 앞에서부터 훑어 그 조합 또는 "아무거나"인 첫 손님에게 판다
+	// 입력: 딸기 해금(Ingredients.csv Cost 5 · Price 12 · OrderWeight 10), 과일 없음 가중치 0 → 조합 주문은 모두 팥+딸기. "아무거나" 0.5, 도착 간격 10초 고정, 인내심 1000(영업 중 떠나지 않음)
+	// 시드 10: 손님 1 · 2 · 3 = 아무거나 · 팥+딸기 · 아무거나. RandomStream.h 알고리즘을 재현해 고른 장면이라 먼저 확인한다
+	FBusinessDayInput Input = MakeSimDayInput();
+	Input.Day.ArrivalMin = 10.f;
+	Input.Day.ArrivalMax = 10.f;
+	Input.Day.Patience = 1000.f;
+	Input.Day.AnyOrderRate = 0.5f;
+	Input.Balance.NoFruitWeight = 0;
+	Input.RandomSeed = 10;
+	FIngredientRow Strawberry;
+	Strawberry.Cost = 5;
+	Strawberry.Price = 12;
+	Strawberry.OrderWeight = 10;
+	Input.Ingredients.Add(EIngredient::Strawberry, Strawberry);
+
+	FBusinessSim Sim;
+	Sim.StartDay(Input, 0.0);
+	const TArray<FCustomer>& Waiting = Sim.GetWaitingCustomers();
+	Sim.ProcessDueEvents(30.0);
+	const bool bScene = Waiting.Num() == 3 && Waiting[0].bAnyOrder && !Waiting[1].bAnyOrder
+		&& Waiting[1].Order.Fruit == EIngredient::Strawberry && Waiting[2].bAnyOrder;
+	if (!TestTrue(TEXT("Scene: [any, RedBean+Strawberry, any]"), bScene))
+	{
+		return false;
+	}
+
+	// 팥+딸기 완성(32.6): 1번(아무거나) · 2번(팥+딸기) 모두 맞다 → 먼저 온 1번. 판매가 (10 + 12) × 1.25 = 27.5 → 28
+	const EBusinessChange FirstChanges = MakeSimProduct(Sim, EIngredient::RedBean, EIngredient::Strawberry, 30.0);
+	TestTrue(TEXT("1st: Customers changed"), EnumHasAnyFlags(FirstChanges, EBusinessChange::Customers));
+	TestTrue(TEXT("1st: Gold changed"), EnumHasAnyFlags(FirstChanges, EBusinessChange::Gold));
+	TestFalse(TEXT("1st: not shelved"), EnumHasAnyFlags(FirstChanges, EBusinessChange::Shelf));
+	if (TestEqual(TEXT("1st: queue"), Waiting.Num(), 2))
+	{
+		TestEqual(TEXT("1st: slot 0"), Waiting[0].Id, 2);
+		TestEqual(TEXT("1st: slot 1"), Waiting[1].Id, 3);
+	}
+	TestEqual(TEXT("1st: sales"), Sim.GetResult().Sales, 28);
+
+	// 팥 완성(35.6): 2번(팥+딸기)은 맞지 않아 건너뛰고 3번(아무거나). 28 + 10 = 38
+	MakeSimProduct(Sim, EIngredient::RedBean, EIngredient::None, 33.0);
+	if (TestEqual(TEXT("2nd: queue"), Waiting.Num(), 1))
+	{
+		TestEqual(TEXT("2nd: skipped customer stays"), Waiting[0].Id, 2);
+	}
+	TestEqual(TEXT("2nd: sales"), Sim.GetResult().Sales, 38);
+
+	// 팥+딸기 완성(38.6): 2번. 38 + 28 = 66. 다음 도착은 40이라 아직 없다
+	MakeSimProduct(Sim, EIngredient::RedBean, EIngredient::Strawberry, 36.0);
+	TestEqual(TEXT("3rd: queue empty"), Waiting.Num(), 0);
+	TestEqual(TEXT("3rd: sales"), Sim.GetResult().Sales, 66);
+	TestEqual(TEXT("Sold count"), Sim.GetResult().SoldCount, 3);
+	TestEqual(TEXT("Nothing shelved"), Sim.GetShelf().Num(), 0);
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FBusinessSimDistributeToShelfTest, "AIGame.BusinessSim.Distribute.ToShelf",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+
+bool FBusinessSimDistributeToShelfTest::RunTest(const FString& Parameters)
+{
+	// R23 ② · D8 · D9 (GDD 제작 완성품 배분, ADR-0011 · ADR-0012). 맞는 손님이 기다리지 않으면 진열대로
+	// 입력: 딸기(Cost 5 · Price 12, 가중치 0) · 블루베리(Cost 9 · Price 15, 가중치 10) 해금(Ingredients.csv), 과일 없음 0 → 손님은 모두 팥+블루베리
+	// "아무거나" 0, 도착 간격 20초 고정, 인내심 1000. 베이스는 모두 팥이므로 과일로 칸을 구분한다
+	FBusinessDayInput Input = MakeSimDayInput();
+	Input.Day.ArrivalMin = 20.f;
+	Input.Day.ArrivalMax = 20.f;
+	Input.Day.Patience = 1000.f;
+	Input.Day.AnyOrderRate = 0.f;
+	Input.Balance.NoFruitWeight = 0;
+	FIngredientRow Strawberry;
+	Strawberry.Cost = 5;
+	Strawberry.Price = 12;
+	Input.Ingredients.Add(EIngredient::Strawberry, Strawberry);
+	FIngredientRow Blueberry;
+	Blueberry.Cost = 9;
+	Blueberry.Price = 15;
+	Blueberry.OrderWeight = 10;
+	Input.Ingredients.Add(EIngredient::Blueberry, Blueberry);
+
+	FBusinessSim Sim;
+	Sim.StartDay(Input, 0.0);
+	const TArray<FShelfEntry>& Shelf = Sim.GetShelf();
+
+	// 첫 도착(20) 전: 기다리는 손님 없음 → 진열대. 매출은 없어 작업대 · 진열대만 바뀐다
+	const EBusinessChange FirstChanges = MakeSimProduct(Sim, EIngredient::RedBean, EIngredient::None, 1.0);
+	TestTrue(TEXT("No customer: Workbench | Shelf"), FirstChanges == (EBusinessChange::Workbench | EBusinessChange::Shelf));
+	if (TestEqual(TEXT("No customer: one slot"), Shelf.Num(), 1))
+	{
+		TestTrue(TEXT("No customer: slot 0 = RedBean"), Shelf[0].Recipe.Fruit == EIngredient::None);
+		TestEqual(TEXT("No customer: slot 0 count"), Shelf[0].Count, 1);
+	}
+	TestEqual(TEXT("No customer: no sales"), Sim.GetResult().Sales, 0);
+
+	// 새 조합은 맨 뒤 칸에 붙고, 이미 있는 조합은 그 칸의 개수만 는다
+	MakeSimProduct(Sim, EIngredient::RedBean, EIngredient::Strawberry, 4.0);
+	MakeSimProduct(Sim, EIngredient::RedBean, EIngredient::None, 7.0);
+	if (TestEqual(TEXT("Same recipe: same slot"), Shelf.Num(), 2))
+	{
+		TestTrue(TEXT("Same recipe: slot 0 = RedBean"), Shelf[0].Recipe.Fruit == EIngredient::None);
+		TestEqual(TEXT("Same recipe: slot 0 count"), Shelf[0].Count, 2);
+		TestTrue(TEXT("New recipe: slot 1 = RedBean+Strawberry"), Shelf[1].Recipe.Fruit == EIngredient::Strawberry);
+		TestEqual(TEXT("New recipe: slot 1 count"), Shelf[1].Count, 1);
+	}
+
+	// t=20 손님1(팥+블루베리): 진열대에 팥+블루베리가 없어 기다린다. 주문과 다른 팥은 손님에게 가지 않고 진열대로
+	Sim.ProcessDueEvents(20.0);
+	TestEqual(TEXT("Customer waiting"), Sim.GetWaitingCustomers().Num(), 1);
+	MakeSimProduct(Sim, EIngredient::RedBean, EIngredient::None, 20.0);
+	TestEqual(TEXT("Mismatch: customer still waiting"), Sim.GetWaitingCustomers().Num(), 1);
+	if (TestEqual(TEXT("Mismatch: slots"), Shelf.Num(), 2))
+	{
+		TestEqual(TEXT("Mismatch: shelved"), Shelf[0].Count, 3);
+	}
+	TestEqual(TEXT("Mismatch: no sales"), Sim.GetResult().Sales, 0);
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FBusinessSimDistributeDiscardWhenFullTest, "AIGame.BusinessSim.Distribute.DiscardWhenFull",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+
+bool FBusinessSimDistributeDiscardWhenFullTest::RunTest(const FString& Parameters)
+{
+	// R23 ③ · D8 (GDD 제작 완성품 배분, ADR-0011). 그 조합 재고가 상한이면 폐기 — 재료비는 탭 때 이미 냈다
+	// 입력: 상한 5(Balance.csv MaxStockPerRecipe), 딸기 해금(Cost 5 · Price 12). 첫 도착을 영업 종료(180) 뒤로 둬 손님이 오지 않고, 7개를 연달아 만들게 게이지 10
+	FBusinessDayInput Input = MakeSimDayInput();
+	Input.Day.ArrivalMin = 1000.f;
+	Input.Day.ArrivalMax = 1000.f;
+	Input.Steamer.MaxGauge = 10;
+	FIngredientRow Strawberry;
+	Strawberry.Cost = 5;
+	Strawberry.Price = 12;
+	Input.Ingredients.Add(EIngredient::Strawberry, Strawberry);
+
+	FBusinessSim Sim;
+	Sim.StartDay(Input, 0.0);
+	const TArray<FShelfEntry>& Shelf = Sim.GetShelf();
+
+	// 경계: 5번째는 개수가 상한과 같아지므로 진열된다
+	for (int32 Index = 0; Index < 5; ++Index)
+	{
+		MakeSimProduct(Sim, EIngredient::RedBean, EIngredient::None, 1.0 + 3.0 * Index);
+	}
+	if (!TestEqual(TEXT("5th: one slot"), Shelf.Num(), 1))
+	{
+		return false;
+	}
+	TestEqual(TEXT("5th: count = cap"), Shelf[0].Count, 5);
+	TestEqual(TEXT("5th: not discarded"), Sim.GetResult().DiscardCount, 0);
+
+	// 6번째: 폐기. 화면의 진열대 · 골드는 그대로라 작업대만 바뀐다. 재료비 (팥 3 + 떡 2) × 6 = 30
+	const EBusinessChange SixthChanges = MakeSimProduct(Sim, EIngredient::RedBean, EIngredient::None, 16.0);
+	TestTrue(TEXT("6th: Workbench only"), SixthChanges == EBusinessChange::Workbench);
+	TestEqual(TEXT("6th: discarded"), Sim.GetResult().DiscardCount, 1);
+	TestEqual(TEXT("6th: count stays at cap"), Shelf[0].Count, 5);
+	TestEqual(TEXT("6th: cost charged"), Sim.GetResult().IngredientCost, 30);
+
+	// 상한은 조합마다다
+	MakeSimProduct(Sim, EIngredient::RedBean, EIngredient::Strawberry, 19.0);
+	if (TestEqual(TEXT("Other recipe: new slot"), Shelf.Num(), 2))
+	{
+		TestEqual(TEXT("Other recipe: count"), Shelf[1].Count, 1);
+	}
+	TestEqual(TEXT("Other recipe: not discarded"), Sim.GetResult().DiscardCount, 1);
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FBusinessSimShelfOrderAndRemoveTest, "AIGame.BusinessSim.Shelf.OrderAndRemove",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+
+bool FBusinessSimShelfOrderAndRemoveTest::RunTest(const FString& Parameters)
+{
+	// R36 · D9 (GDD 화면 구성 진열대, ADR-0012). 칸 순서 = 처음 진열된 순서. 개수가 0이 되면 칸을 빼고 뒤 칸이 당겨지며, 다시 만들면 맨 뒤에 붙는다
+	// 입력: 딸기(Price 12, 가중치 10) · 블루베리(Price 15, 가중치 0) 해금, 과일 없음 0 → 손님은 모두 팥+딸기. "아무거나" 0, 도착 간격 30초 고정, 게이지 10
+	// 베이스는 모두 팥이므로 과일로 칸을 구분한다
+	FBusinessDayInput Input = MakeSimDayInput();
+	Input.Day.ArrivalMin = 30.f;
+	Input.Day.ArrivalMax = 30.f;
+	Input.Day.AnyOrderRate = 0.f;
+	Input.Balance.NoFruitWeight = 0;
+	Input.Steamer.MaxGauge = 10;
+	FIngredientRow Strawberry;
+	Strawberry.Cost = 5;
+	Strawberry.Price = 12;
+	Strawberry.OrderWeight = 10;
+	Input.Ingredients.Add(EIngredient::Strawberry, Strawberry);
+	FIngredientRow Blueberry;
+	Blueberry.Cost = 9;
+	Blueberry.Price = 15;
+	Input.Ingredients.Add(EIngredient::Blueberry, Blueberry);
+
+	FBusinessSim Sim;
+	Sim.StartDay(Input, 0.0);
+	const TArray<FShelfEntry>& Shelf = Sim.GetShelf();
+
+	// 첫 도착(30) 전에 팥 → 팥+딸기 → 팥+딸기 → 팥+블루베리
+	MakeSimProduct(Sim, EIngredient::RedBean, EIngredient::None, 1.0);
+	MakeSimProduct(Sim, EIngredient::RedBean, EIngredient::Strawberry, 4.0);
+	MakeSimProduct(Sim, EIngredient::RedBean, EIngredient::Strawberry, 7.0);
+	MakeSimProduct(Sim, EIngredient::RedBean, EIngredient::Blueberry, 10.0);
+	if (TestEqual(TEXT("Made: slots"), Shelf.Num(), 3))
+	{
+		TestTrue(TEXT("Made: slot 0 = RedBean"), Shelf[0].Recipe.Fruit == EIngredient::None);
+		TestTrue(TEXT("Made: slot 1 = RedBean+Strawberry"), Shelf[1].Recipe.Fruit == EIngredient::Strawberry);
+		TestEqual(TEXT("Made: slot 1 count"), Shelf[1].Count, 2);
+		TestTrue(TEXT("Made: slot 2 = RedBean+Blueberry"), Shelf[2].Recipe.Fruit == EIngredient::Blueberry);
+	}
+
+	// t=30 손님1이 팥+딸기를 산다: 개수만 줄고 칸 위치는 그대로
+	Sim.ProcessDueEvents(30.0);
+	if (TestEqual(TEXT("Count down: slots"), Shelf.Num(), 3))
+	{
+		TestTrue(TEXT("Count down: slot 1 = RedBean+Strawberry"), Shelf[1].Recipe.Fruit == EIngredient::Strawberry);
+		TestEqual(TEXT("Count down: slot 1 count"), Shelf[1].Count, 1);
+		TestTrue(TEXT("Count down: slot 2 = RedBean+Blueberry"), Shelf[2].Recipe.Fruit == EIngredient::Blueberry);
+	}
+
+	// t=60 손님2가 마지막 팥+딸기를 산다: 칸을 빼고 뒤 칸이 당겨진다
+	Sim.ProcessDueEvents(60.0);
+	if (TestEqual(TEXT("Removed: slots"), Shelf.Num(), 2))
+	{
+		TestTrue(TEXT("Removed: slot 0 = RedBean"), Shelf[0].Recipe.Fruit == EIngredient::None);
+		TestTrue(TEXT("Removed: slot 1 = RedBean+Blueberry (pulled forward)"), Shelf[1].Recipe.Fruit == EIngredient::Blueberry);
+	}
+
+	// 팥+딸기를 다시 만들면 맨 뒤에 붙는다. 다음 도착은 90
+	MakeSimProduct(Sim, EIngredient::RedBean, EIngredient::Strawberry, 61.0);
+	if (TestEqual(TEXT("Remade: slots"), Shelf.Num(), 3))
+	{
+		TestTrue(TEXT("Remade: slot 0 = RedBean"), Shelf[0].Recipe.Fruit == EIngredient::None);
+		TestTrue(TEXT("Remade: slot 1 = RedBean+Blueberry"), Shelf[1].Recipe.Fruit == EIngredient::Blueberry);
+		TestTrue(TEXT("Remade: slot 2 = RedBean+Strawberry"), Shelf[2].Recipe.Fruit == EIngredient::Strawberry);
+		TestEqual(TEXT("Remade: slot 2 count"), Shelf[2].Count, 1);
+	}
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FBusinessSimPriceSingleAndMixTest, "AIGame.BusinessSim.Price.SingleAndMix",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+
+bool FBusinessSimPriceSingleAndMixTest::RunTest(const FString& Parameters)
+{
+	// R4 (GDD 경제 판매가, data-schema.md Ingredients 절)
+	// 입력: Ingredients.csv Price 팥 10 · 딸기 12 · 요거트 22 · 블루베리 15, Balance.csv MixMultiplier 1.25
+	// 모든 손님을 "아무거나"(1 — 항상)로 두면 어떤 조합이든 기다리는 손님에게 팔린다. 도착 간격 10초 고정, 인내심 1000 → 30까지 3명
+	FBusinessDayInput Input = MakeSimDayInput();
+	Input.Day.ArrivalMin = 10.f;
+	Input.Day.ArrivalMax = 10.f;
+	Input.Day.Patience = 1000.f;
+	Input.Day.AnyOrderRate = 1.f;
+	FIngredientRow Strawberry;
+	Strawberry.Price = 12;
+	Input.Ingredients.Add(EIngredient::Strawberry, Strawberry);
+	FIngredientRow Yogurt;
+	Yogurt.Price = 22;
+	Input.Ingredients.Add(EIngredient::Yogurt, Yogurt);
+	FIngredientRow Blueberry;
+	Blueberry.Price = 15;
+	Input.Ingredients.Add(EIngredient::Blueberry, Blueberry);
+
+	FBusinessSim Sim;
+	Sim.StartDay(Input, 0.0);
+	Sim.ProcessDueEvents(30.0);
+	TestEqual(TEXT("Three waiting"), Sim.GetWaitingCustomers().Num(), 3);
+
+	MakeSimProduct(Sim, EIngredient::RedBean, EIngredient::None, 30.0);
+	TestEqual(TEXT("Single: base price"), Sim.GetResult().Sales, 10);
+
+	// (10 + 12) × 1.25 = 27.5 → 28. 경계: 소수부 0.5는 올린다(GenericPlatformMath.h RoundToInt32)
+	MakeSimProduct(Sim, EIngredient::RedBean, EIngredient::Strawberry, 33.0);
+	TestEqual(TEXT("Mix: 27.5 rounds up to 28"), Sim.GetResult().Sales, 38);
+
+	// (22 + 15) × 1.25 = 46.25 → 46
+	MakeSimProduct(Sim, EIngredient::Yogurt, EIngredient::Blueberry, 36.0);
+	TestEqual(TEXT("Mix: 46.25 rounds down to 46"), Sim.GetResult().Sales, 84);
+	TestEqual(TEXT("Sold"), Sim.GetResult().SoldCount, 3);
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FBusinessSimCustomerBuyFromShelfOnArriveTest, "AIGame.BusinessSim.Customer.BuyFromShelfOnArrive",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+
+bool FBusinessSimCustomerBuyFromShelfOnArriveTest::RunTest(const FString& Parameters)
+{
+	// R15 · D13 (GDD 손님, ADR-0015). 원하는 조합이 진열대에 있으면 대기열이 꽉 차 있어도 바로 사 가고, 대기열에는 들어가지 않는다
+	// 입력: 대기열 1, 딸기(Price 12) · 블루베리(Price 15) 해금 · 주문 가중치 10씩, 과일 없음 0 → 주문은 팥+딸기 또는 팥+블루베리
+	// "아무거나" 0, 도착 간격 10초 고정, 인내심 1000
+	// 시드 1: 손님1 = 팥+딸기, 손님2 = 팥+블루베리. RandomStream.h 알고리즘을 재현해 고른 장면이라 손님1을 먼저 확인한다
+	FBusinessDayInput Input = MakeSimDayInput();
+	Input.Day.ArrivalMin = 10.f;
+	Input.Day.ArrivalMax = 10.f;
+	Input.Day.Patience = 1000.f;
+	Input.Day.MaxQueue = 1;
+	Input.Day.AnyOrderRate = 0.f;
+	Input.Balance.NoFruitWeight = 0;
+	Input.RandomSeed = 1;
+	FIngredientRow Strawberry;
+	Strawberry.Price = 12;
+	Strawberry.OrderWeight = 10;
+	Input.Ingredients.Add(EIngredient::Strawberry, Strawberry);
+	FIngredientRow Blueberry;
+	Blueberry.Price = 15;
+	Blueberry.OrderWeight = 10;
+	Input.Ingredients.Add(EIngredient::Blueberry, Blueberry);
+
+	FBusinessSim Sim;
+	Sim.StartDay(Input, 0.0);
+	const TArray<FCustomer>& Waiting = Sim.GetWaitingCustomers();
+	Sim.ProcessDueEvents(10.0);
+	const bool bScene = Waiting.Num() == 1 && Waiting[0].Order.Fruit == EIngredient::Strawberry;
+	if (!TestTrue(TEXT("Scene: customer 1 = RedBean+Strawberry, queue full"), bScene))
+	{
+		return false;
+	}
+
+	// 손님1 주문과 다른 팥+블루베리 → 진열대
+	MakeSimProduct(Sim, EIngredient::RedBean, EIngredient::Blueberry, 11.0);
+	TestEqual(TEXT("Shelved"), Sim.GetShelf().Num(), 1);
+
+	// t=20 손님2(팥+블루베리): 대기열이 꽉 찼지만 재고가 있어 바로 산다. 손님 줄은 그대로라 진열대 · 골드만 바뀐다(architecture.md 4.5)
+	const EBusinessChange ArriveChanges = Sim.ProcessDueEvents(20.0);
+	TestTrue(TEXT("Arrive: Shelf | Gold"), ArriveChanges == (EBusinessChange::Shelf | EBusinessChange::Gold));
+	if (TestEqual(TEXT("Arrive: queue unchanged"), Waiting.Num(), 1))
+	{
+		TestEqual(TEXT("Arrive: slot 0 still customer 1"), Waiting[0].Id, 1);
+	}
+	TestEqual(TEXT("Arrive: stock sold out"), Sim.GetShelf().Num(), 0);
+	// (10 + 15) × 1.25 = 31.25 → 31
+	TestEqual(TEXT("Arrive: sales"), Sim.GetResult().Sales, 31);
+	TestEqual(TEXT("Arrive: sold"), Sim.GetResult().SoldCount, 1);
+	TestEqual(TEXT("Arrive: not missed"), Sim.GetResult().MissedCustomers, 0);
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FBusinessSimCustomerAnyPicksByCountTest, "AIGame.BusinessSim.Customer.AnyPicksByCount",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+
+bool FBusinessSimCustomerAnyPicksByCountTest::RunTest(const FString& Parameters)
+{
+	// R16 · D12 (GDD 손님, ADR-0015). "아무거나" 손님은 진열된 모찌 하나하나를 같은 확률로 고른다 — 개수 비례
+	// 입력: 딸기 해금(Price 12), 모든 손님 "아무거나", 첫 도착 30. 도착 전에 진열대 [팥 4, 팥+딸기 1]을 만든다(게이지 10)
+	// 시드 1~100에서 팥이 뽑힌 수: 기대 80. 칸마다 같은 확률이면 50, 맨 앞 칸 고정이면 100, 맨 뒤 칸 고정이면 0 → 70~90만 통과
+	// 시드 고정이라 결과는 매번 같다(RandomStream.h 알고리즘 재현으로 79)
+	FBusinessDayInput Input = MakeSimDayInput();
+	Input.Day.ArrivalMin = 30.f;
+	Input.Day.ArrivalMax = 30.f;
+	Input.Day.AnyOrderRate = 1.f;
+	Input.Steamer.MaxGauge = 10;
+	FIngredientRow Strawberry;
+	Strawberry.Price = 12;
+	Input.Ingredients.Add(EIngredient::Strawberry, Strawberry);
+
+	int32 RedBeanPicks = 0;
+	for (int32 Seed = 1; Seed <= 100; ++Seed)
+	{
+		Input.RandomSeed = Seed;
+		FBusinessSim Sim;
+		Sim.StartDay(Input, 0.0);
+		for (int32 Index = 0; Index < 4; ++Index)
+		{
+			MakeSimProduct(Sim, EIngredient::RedBean, EIngredient::None, 1.0 + 3.0 * Index);
+		}
+		MakeSimProduct(Sim, EIngredient::RedBean, EIngredient::Strawberry, 13.0);
+		Sim.ProcessDueEvents(30.0);
+
+		// 팥을 사면 [팥 3, 팥+딸기 1], 팥+딸기를 사면 그 칸이 빠져 [팥 4]
+		const TArray<FShelfEntry>& Shelf = Sim.GetShelf();
+		const bool bRedBeanPicked = Shelf.Num() == 2 && Shelf[0].Count == 3 && Shelf[1].Count == 1;
+		const bool bStrawberryPicked = Shelf.Num() == 1 && Shelf[0].Count == 4;
+		TestTrue(TEXT("Exactly one bought from shelf"), bRedBeanPicked || bStrawberryPicked);
+		if (bRedBeanPicked)
+		{
+			++RedBeanPicks;
+		}
+	}
+	TestTrue(TEXT("Picks proportional to count: RedBean 70~90 of 100"), RedBeanPicks >= 70 && RedBeanPicks <= 90);
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FBusinessSimDayEndDiscardAndClearTest, "AIGame.BusinessSim.DayEnd.DiscardAndClear",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+
+bool FBusinessSimDayEndDiscardAndClearTest::RunTest(const FString& Parameters)
+{
+	// R29 · D14 · F1 (GDD 하루 진행 영업 종료, ADR-0015, architecture.md 3.6 DayEnd · 4.7 F1). 남은 재고와 작업대 위 재료는 폐기, 대기 손님은 돌아간다(놓친 손님 아님)
+	// 쓰레기 연출 중이던 작업대는 판정 때 쓰레기 수에 들어갔으므로 폐기에 더하지 않는다(architecture.md 3.6 DayEnd 메모)
+	// 입력: 딸기(Cost 5, 가중치 0) · 블루베리(가중치 10) 해금, 과일 없음 0 → 손님은 모두 팥+블루베리. "아무거나" 0, 도착 간격 100초 고정, 인내심 1000
+	FBusinessDayInput Input = MakeSimDayInput();
+	Input.Day.ArrivalMin = 100.f;
+	Input.Day.ArrivalMax = 100.f;
+	Input.Day.Patience = 1000.f;
+	Input.Day.AnyOrderRate = 0.f;
+	Input.Balance.NoFruitWeight = 0;
+	FIngredientRow Strawberry;
+	Strawberry.Cost = 5;
+	Input.Ingredients.Add(EIngredient::Strawberry, Strawberry);
+	FIngredientRow Blueberry;
+	Blueberry.OrderWeight = 10;
+	Input.Ingredients.Add(EIngredient::Blueberry, Blueberry);
+
+	FBusinessSim Sim;
+
+	// (A) 진열 [팥 2] + 감싸기 중 + 기다리는 손님 1명
+	Sim.StartDay(Input, 0.0);
+	MakeSimProduct(Sim, EIngredient::RedBean, EIngredient::None, 1.0);
+	MakeSimProduct(Sim, EIngredient::RedBean, EIngredient::None, 4.0);
+	Sim.ProcessDueEvents(100.0);
+	TestEqual(TEXT("A: customer waiting"), Sim.GetWaitingCustomers().Num(), 1);
+	// 179.5 + WrapTime 0.6 = 180.1 > 영업 종료 180 → 감싸기 중에 끝난다
+	Sim.TapIngredient(EIngredient::RedBean, 178.0);
+	Sim.TapIngredient(EIngredient::Strawberry, 179.0);
+	Sim.TapSteamer(179.5);
+	TestTrue(TEXT("A: wrapping before day end"), Sim.GetWorkbenchState() == EWorkbenchState::Wrapping);
+	const EBusinessChange EndChanges = Sim.ProcessDueEvents(180.0);
+	TestTrue(TEXT("A: DayEnded"), EnumHasAnyFlags(EndChanges, EBusinessChange::DayEnded));
+	TestTrue(TEXT("A: Shelf changed"), EnumHasAnyFlags(EndChanges, EBusinessChange::Shelf));
+	// 진열 2 + 감싸기 중 1
+	TestEqual(TEXT("A: discard = stock + workbench"), Sim.GetResult().DiscardCount, 3);
+	TestEqual(TEXT("A: shelf cleared"), Sim.GetShelf().Num(), 0);
+	TestEqual(TEXT("A: queue cleared"), Sim.GetWaitingCustomers().Num(), 0);
+	TestEqual(TEXT("A: waiting customer is not missed"), Sim.GetResult().MissedCustomers, 0);
+	TestTrue(TEXT("A: workbench Empty"), Sim.GetWorkbenchState() == EWorkbenchState::Empty);
+	TestTrue(TEXT("A: recipe cleared"), Sim.GetWorkbenchRecipe() == FRecipe());
+
+	// (B) 쓰레기 연출 중(179.8 + TrashTime 0.5 = 180.3)에 영업 종료
+	Sim.StartDay(Input, 0.0);
+	Sim.TapIngredient(EIngredient::Strawberry, 179.8);
+	Sim.ProcessDueEvents(180.0);
+	TestEqual(TEXT("B: counted as trash"), Sim.GetResult().TrashCount, 1);
+	TestEqual(TEXT("B: trash is not discard"), Sim.GetResult().DiscardCount, 0);
+
+	// (C) 베이스만 올린 채 영업 종료
+	Sim.StartDay(Input, 0.0);
+	Sim.TapIngredient(EIngredient::RedBean, 179.9);
+	Sim.ProcessDueEvents(180.0);
+	TestEqual(TEXT("C: ingredient on workbench discarded"), Sim.GetResult().DiscardCount, 1);
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FBusinessSimDayEndResultCountsTest, "AIGame.BusinessSim.DayEnd.ResultCounts",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+
+bool FBusinessSimDayEndResultCountsTest::RunTest(const FString& Parameters)
+{
+	// R37 (GDD 화면 구성 결산 팝업 · D14). 하루 집계의 항목마다 그 값을 만드는 경로를 한 번씩 지난다
+	// 입력: 팥만 해금(Cost 3 · Price 10) → 주문은 모두 팥, "아무거나" 0. 도착 간격 40초 고정(40 · 80 · 120 · 160), 인내심 25(Days.csv 1일차)
+	// 진열 상한 1 — 두 번째 팥이 바로 폐기되게 한다. 시작 골드 100 · 임대료 50
+	FBusinessDayInput Input = MakeSimDayInput();
+	Input.Day.ArrivalMin = 40.f;
+	Input.Day.ArrivalMax = 40.f;
+	Input.Day.AnyOrderRate = 0.f;
+	Input.Balance.MaxStockPerRecipe = 1;
+
+	FBusinessSim Sim;
+	Sim.StartDay(Input, 0.0);
+	// 팥 → 진열 [팥 1]. 재료비 팥 3 + 떡 2 = 5
+	MakeSimProduct(Sim, EIngredient::RedBean, EIngredient::None, 1.0);
+	// 팥 → 상한이라 폐기 1. 재료비 10
+	MakeSimProduct(Sim, EIngredient::RedBean, EIngredient::None, 4.0);
+	// 팥 + 팥 → 쓰레기(2번) 1. 재료비 16
+	Sim.TapIngredient(EIngredient::RedBean, 7.0);
+	Sim.TapIngredient(EIngredient::RedBean, 8.0);
+	Sim.ProcessDueEvents(9.0);
+	// t=40 손님1: 진열된 팥을 바로 산다(판매 1 · 매출 10). t=80 손님2: 재고가 없어 기다린다(만료 105)
+	Sim.ProcessDueEvents(80.0);
+	// 팥 완성(83.6) → 손님2에게(판매 2 · 매출 20). 재료비 21
+	MakeSimProduct(Sim, EIngredient::RedBean, EIngredient::None, 81.0);
+	// 손님2의 만료(105)는 버려진다. t=120 손님3은 145에 떠난다(놓친 손님 1). t=160 손님4는 만료(185) 전에 영업이 끝난다(놓친 손님 아님)
+	Sim.ProcessDueEvents(160.0);
+	// 베이스만 올린 채 영업 종료 → 폐기 2. 재료비 24
+	Sim.TapIngredient(EIngredient::RedBean, 179.0);
+	Sim.ProcessDueEvents(180.0);
+
+	const FDayResult& Result = Sim.GetResult();
+	TestTrue(TEXT("Day over"), Sim.IsDayOver());
+	TestEqual(TEXT("Sales"), Result.Sales, 20);
+	TestEqual(TEXT("IngredientCost"), Result.IngredientCost, 24);
+	TestEqual(TEXT("SoldCount"), Result.SoldCount, 2);
+	TestEqual(TEXT("MissedCustomers"), Result.MissedCustomers, 1);
+	TestEqual(TEXT("TrashCount"), Result.TrashCount, 1);
+	TestEqual(TEXT("DiscardCount"), Result.DiscardCount, 2);
+	TestEqual(TEXT("Rent"), Result.Rent, 50);
+	// 100 − 50 + 20 − 24
+	TestEqual(TEXT("Current gold"), Sim.GetCurrentGold(), 46);
 	return true;
 }
 

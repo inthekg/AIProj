@@ -845,6 +845,8 @@ private:
 | WorkbenchDone | Wrapping이면 배분(1.10: 손님 → 진열대 → 폐기). Trash면 비우기. 작업대 Empty | Workbench (+ Customers · Shelf · Gold) |
 | DayEnd | 진열 개수 합 + 작업대 1개(Empty · Trash가 아니면)를 DiscardCount에. 대기열 · 진열대 · 힙 비우기, 작업대 Empty(레시피 비움 — 4.7 F1), SteamerRefillEndTime = 0(힙과 함께 SteamerRefilled가 사라지므로 '다시 찌는 중이 아니면 0' 계약을 지킨다 — T12 사용자 결정 Q2). 대기 손님은 놓친 손님에 넣지 않는다(D14) | 전부 + DayEnded |
 - 영업 종료 때 쓰레기 연출 중이던 작업대는 이미 쓰레기 수에 들어갔으므로 폐기 수에 더하지 않는다. 감싸기 중이던 모찌는 GDD "작업대 위 재료는 폐기"에 따라 폐기 수 +1.
+- WorkbenchDone의 감싸기 여부, DayEnd의 작업대 폐기 여부는 switch 대신 if 비교로 쓴다(T13 사용자 결정 Q1 — 한두 상태만 가르는 분기라 단순성 원칙 우선).
+- 진열 상한(Balance.MaxStockPerRecipe)은 1 이상이다. `UShopGameInstance::Init`이 검사하고(T13 사용자 결정 Q3), 배분은 그 전제로 새 칸을 개수 1로 넣는다.
 
 ### 3.7 ABusinessGameMode — BusinessGameMode.h
 ```cpp
@@ -1006,6 +1008,7 @@ private:
 | `TArray::HeapPush` · `HeapPop` · `HeapTop` | Runtime/Core/Public/Containers/Array.h 3359 · 3435 · 3533 |
 | `TOptional` | Runtime/Core/Public/Misc/Optional.h 56 |
 | `TMap::Find`(const) | Runtime/Core/Public/Containers/Map.h 568 (T11) |
+| `TMap::FindChecked`(const) | Runtime/Core/Public/Containers/Map.h 687 (T13) |
 | `FRandomStream::Initialize` · `FRand` · `RandRange` · `FRandRange` | Runtime/Core/Public/Math/RandomStream.h 63 · 176 · 197 · 209 |
 | `FMath::RoundToInt` | Runtime/Core/Public/GenericPlatform/GenericPlatformMath.h 323 |
 | `ENUM_CLASS_FLAGS` | Runtime/Core/Public/Misc/EnumClassFlags.h 6 |
