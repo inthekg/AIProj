@@ -14,15 +14,11 @@ EBusinessChange FBusinessSim::StartDay(const FBusinessDayInput& InInput, double 
 {
 	Input = InInput;
 	Random.Initialize(Input.RandomSeed);
-	WaitingCustomers.Reset();
+	ClearDay();
 	NextCustomerId = 1;
-	EventHeap.Reset();
 	NextEventSeq = 0;
-	ClearWorkbench();
 	InputLockEndTime = 0.0;
 	SteamerGauge = Input.Steamer.MaxGauge;
-	SteamerRefillEndTime = 0.0;
-	Shelf.Reset();
 	Result = FDayResult();
 
 	Result.Rent = Input.Balance.BaseRent;
@@ -215,96 +211,12 @@ EBusinessChange FBusinessSim::ProcessDueEvents(double Now)
 			Customer.bAnyOrder = Random.FRand() < Input.Day.AnyOrderRate;
 			if (!Customer.bAnyOrder)
 			{
-				int32 BaseWeightSum = 0;
-				int32 FruitWeightSum = Input.Balance.NoFruitWeight;
-				for (const TPair<EIngredient, FIngredientRow>& Pair : Input.Ingredients)
-				{
-					if (IsBaseIngredient(Pair.Key))
-					{
-						BaseWeightSum += Pair.Value.OrderWeight;
-					}
-					else
-					{
-						FruitWeightSum += Pair.Value.OrderWeight;
-					}
-				}
-
-				int32 BaseRoll = Random.RandRange(0, BaseWeightSum - 1);
-				for (const TPair<EIngredient, FIngredientRow>& Pair : Input.Ingredients)
-				{
-					if (!IsBaseIngredient(Pair.Key))
-					{
-						continue;
-					}
-					Customer.Order.Base = Pair.Key;
-					BaseRoll -= Pair.Value.OrderWeight;
-					if (BaseRoll < 0)
-					{
-						break;
-					}
-				}
-
-				// 0보다 작으면 '과일 없음'(Order.Fruit 기본값 None)
-				int32 FruitRoll = Random.RandRange(0, FruitWeightSum - 1) - Input.Balance.NoFruitWeight;
-				if (FruitRoll >= 0)
-				{
-					for (const TPair<EIngredient, FIngredientRow>& Pair : Input.Ingredients)
-					{
-						if (IsBaseIngredient(Pair.Key))
-						{
-							continue;
-						}
-						Customer.Order.Fruit = Pair.Key;
-						FruitRoll -= Pair.Value.OrderWeight;
-						if (FruitRoll < 0)
-						{
-							break;
-						}
-					}
-				}
+				Customer.Order = PickComboOrder();
 			}
 
 			// 순서 중요: 재고 확인이 대기열 상한 검사보다 먼저다
-			int32 ShelfIndex = INDEX_NONE;
-			if (Customer.bAnyOrder)
+			if (TryBuyFromShelf(Customer))
 			{
-				if (!Shelf.IsEmpty())
-				{
-					// D12: 진열된 모찌 하나하나가 같은 확률(개수 비례). 주문 가중치와 같은 누적 방식으로 칸을 고른다
-					int32 StockSum = 0;
-					for (const FShelfEntry& Entry : Shelf)
-					{
-						StockSum += Entry.Count;
-					}
-					int32 StockRoll = Random.RandRange(0, StockSum - 1);
-					for (ShelfIndex = 0; ShelfIndex < Shelf.Num(); ++ShelfIndex)
-					{
-						StockRoll -= Shelf[ShelfIndex].Count;
-						if (StockRoll < 0)
-						{
-							break;
-						}
-					}
-				}
-			}
-			else
-			{
-				//진열대에 이미 있는가
-				ShelfIndex = Shelf.IndexOfByPredicate([&Customer](const FShelfEntry& Entry)
-				{
-					return Entry.Recipe == Customer.Order;
-				});
-			}
-
-			if (ShelfIndex != INDEX_NONE)
-			{
-				// 순서 중요: 칸을 빼기 전에 그 칸의 조합으로 판다. 손님 대기열에 들어가지 않으므로 ID · 외형 · 만료 이벤트가 없다
-				Sell(Shelf[ShelfIndex].Recipe, INDEX_NONE);
-				--Shelf[ShelfIndex].Count;
-				if (Shelf[ShelfIndex].Count == 0)
-				{
-					Shelf.RemoveAt(ShelfIndex);
-				}
 				Changes |= EBusinessChange::Shelf | EBusinessChange::Gold;
 				continue;
 			}
@@ -348,43 +260,7 @@ EBusinessChange FBusinessSim::ProcessDueEvents(double Now)
 			// 순서 중요: 배분이 WorkbenchRecipe를 읽으므로 ClearWorkbench보다 먼저다.
 			if (WorkbenchState == EWorkbenchState::Wrapping)
 			{
-				const int32 WaitingIndex = WaitingCustomers.IndexOfByPredicate([this](const FCustomer& Waiting)
-				{
-					return Waiting.bAnyOrder || Waiting.Order == WorkbenchRecipe;
-				});
-
-				//원하는 손님이 존재
-				if (WaitingIndex != INDEX_NONE)
-				{
-					Sell(WorkbenchRecipe, WaitingIndex);
-					Changes |= EBusinessChange::Customers | EBusinessChange::Gold;
-				}
-				//진열대 배치
-				else
-				{
-					const int32 ShelfIndex = Shelf.IndexOfByPredicate([this](const FShelfEntry& Entry)
-					{
-						return Entry.Recipe == WorkbenchRecipe;
-					});
-					if (ShelfIndex == INDEX_NONE)
-					{
-						FShelfEntry NewEntry;
-						NewEntry.Recipe = WorkbenchRecipe;
-						NewEntry.Count = 1;
-						Shelf.Add(NewEntry);
-						Changes |= EBusinessChange::Shelf;
-					}
-					else if (Shelf[ShelfIndex].Count < Input.Balance.MaxStockPerRecipe)
-					{
-						++Shelf[ShelfIndex].Count;
-						Changes |= EBusinessChange::Shelf;
-					}
-					else
-					{
-						// ADR-0011: 진열대 상한이면 폐기.
-						++Result.DiscardCount;
-					}
-				}
+				Changes |= DistributeProduct();
 			}
 			ClearWorkbench();
 			Changes |= EBusinessChange::Workbench;
@@ -400,12 +276,7 @@ EBusinessChange FBusinessSim::ProcessDueEvents(double Now)
 			{
 				++Result.DiscardCount;
 			}
-			Shelf.Reset();
-			WaitingCustomers.Reset();
-			// 작업대를 되돌리지 않으면 감싸기 연출이 다시 재생된다(architecture.md 4.7 F1)
-			ClearWorkbench();
-			EventHeap.Reset();
-			SteamerRefillEndTime = 0.0;
+			ClearDay();
 			Changes |= EBusinessChange::Customers | EBusinessChange::Workbench | EBusinessChange::Steamer
 				| EBusinessChange::Shelf | EBusinessChange::Gold | EBusinessChange::DayEnded;
 			continue;
@@ -467,4 +338,157 @@ void FBusinessSim::TrashWorkbench(double Now)
 	++Result.TrashCount;
 	InputLockEndTime = Now + Input.Balance.TrashTime;
 	PushEvent(InputLockEndTime, EBusinessEventType::WorkbenchDone);
+}
+
+void FBusinessSim::ClearDay()
+{
+	Shelf.Reset();
+	WaitingCustomers.Reset();
+	// 작업대를 되돌리지 않으면 감싸기 연출이 다시 재생된다(architecture.md 4.7 F1)
+	ClearWorkbench();
+	EventHeap.Reset();
+	SteamerRefillEndTime = 0.0;
+}
+
+FRecipe FBusinessSim::PickComboOrder()
+{
+	FRecipe Order;
+	int32 BaseWeightSum = 0;
+	int32 FruitWeightSum = Input.Balance.NoFruitWeight;
+	for (const TPair<EIngredient, FIngredientRow>& Pair : Input.Ingredients)
+	{
+		if (IsBaseIngredient(Pair.Key))
+		{
+			BaseWeightSum += Pair.Value.OrderWeight;
+		}
+		else
+		{
+			FruitWeightSum += Pair.Value.OrderWeight;
+		}
+	}
+
+	int32 BaseRoll = Random.RandRange(0, BaseWeightSum - 1);
+	for (const TPair<EIngredient, FIngredientRow>& Pair : Input.Ingredients)
+	{
+		if (!IsBaseIngredient(Pair.Key))
+		{
+			continue;
+		}
+		Order.Base = Pair.Key;
+		BaseRoll -= Pair.Value.OrderWeight;
+		if (BaseRoll < 0)
+		{
+			break;
+		}
+	}
+
+	// 0보다 작으면 '과일 없음'(Order.Fruit 기본값 None)
+	int32 FruitRoll = Random.RandRange(0, FruitWeightSum - 1) - Input.Balance.NoFruitWeight;
+	if (FruitRoll >= 0)
+	{
+		for (const TPair<EIngredient, FIngredientRow>& Pair : Input.Ingredients)
+		{
+			if (IsBaseIngredient(Pair.Key))
+			{
+				continue;
+			}
+			Order.Fruit = Pair.Key;
+			FruitRoll -= Pair.Value.OrderWeight;
+			if (FruitRoll < 0)
+			{
+				break;
+			}
+		}
+	}
+	return Order;
+}
+
+bool FBusinessSim::TryBuyFromShelf(const FCustomer& Customer)
+{
+	int32 ShelfIndex = INDEX_NONE;
+	if (Customer.bAnyOrder)
+	{
+		if (!Shelf.IsEmpty())
+		{
+			// D12: 진열된 모찌 하나하나가 같은 확률(개수 비례). 주문 가중치와 같은 누적 방식으로 칸을 고른다
+			int32 StockSum = 0;
+			for (const FShelfEntry& Entry : Shelf)
+			{
+				StockSum += Entry.Count;
+			}
+			int32 StockRoll = Random.RandRange(0, StockSum - 1);
+			for (ShelfIndex = 0; ShelfIndex < Shelf.Num(); ++ShelfIndex)
+			{
+				StockRoll -= Shelf[ShelfIndex].Count;
+				if (StockRoll < 0)
+				{
+					break;
+				}
+			}
+		}
+	}
+	else
+	{
+		//진열대에 이미 있는가
+		ShelfIndex = Shelf.IndexOfByPredicate([&Customer](const FShelfEntry& Entry)
+		{
+			return Entry.Recipe == Customer.Order;
+		});
+	}
+
+	if (ShelfIndex != INDEX_NONE)
+	{
+		// 순서 중요: 칸을 빼기 전에 그 칸의 조합으로 판다. 손님 대기열에 들어가지 않으므로 ID · 외형 · 만료 이벤트가 없다
+		Sell(Shelf[ShelfIndex].Recipe, INDEX_NONE);
+		--Shelf[ShelfIndex].Count;
+		if (Shelf[ShelfIndex].Count == 0)
+		{
+			Shelf.RemoveAt(ShelfIndex);
+		}
+		return true;
+	}
+	return false;
+}
+
+EBusinessChange FBusinessSim::DistributeProduct()
+{
+	EBusinessChange Changes = EBusinessChange::None;
+	const int32 WaitingIndex = WaitingCustomers.IndexOfByPredicate([this](const FCustomer& Waiting)
+	{
+		return Waiting.bAnyOrder || Waiting.Order == WorkbenchRecipe;
+	});
+
+	//원하는 손님이 존재
+	if (WaitingIndex != INDEX_NONE)
+	{
+		Sell(WorkbenchRecipe, WaitingIndex);
+		Changes |= EBusinessChange::Customers | EBusinessChange::Gold;
+	}
+	//진열대 배치
+	else
+	{
+		const int32 ShelfIndex = Shelf.IndexOfByPredicate([this](const FShelfEntry& Entry)
+		{
+			return Entry.Recipe == WorkbenchRecipe;
+		});
+		if (ShelfIndex == INDEX_NONE)
+		{
+			FShelfEntry NewEntry;
+			NewEntry.Recipe = WorkbenchRecipe;
+			NewEntry.Count = 1;
+			Shelf.Add(NewEntry);
+			Changes |= EBusinessChange::Shelf;
+		}
+		else if (Shelf[ShelfIndex].Count < Input.Balance.MaxStockPerRecipe)
+		{
+			++Shelf[ShelfIndex].Count;
+			Changes |= EBusinessChange::Shelf;
+		}
+		else
+		{
+			// ADR-0011: 진열대 상한이면 폐기.
+			++Result.DiscardCount;
+		}
+	}
+	return Changes;
 }

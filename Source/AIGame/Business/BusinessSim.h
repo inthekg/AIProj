@@ -144,4 +144,8 @@ private:
 
 	void ClearWorkbench();
 	void TrashWorkbench(double Now);
+	void ClearDay();
+	FRecipe PickComboOrder();
+	bool TryBuyFromShelf(const FCustomer& Customer);
+	EBusinessChange DistributeProduct();
 };
