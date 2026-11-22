@@ -109,7 +109,7 @@ flowchart LR
     GI <-- "저장 · 불러오기" --> SG
     GM -- "BeginPlay: 진행 값 · 기획 데이터 받기" --> GI
     HUD -- "탭 입력" --> GM
-    GM -- "입력 + Now / Advance(Now)" --> SIM
+    GM -- "입력 + Now / ProcessDueEvents(Now)" --> SIM
     SIM -- "바뀐 부분 플래그" --> GM
     GM -- "델리게이트" --> HUD
     GM -- "영업 종료: 하루 결과" --> GI
@@ -118,7 +118,7 @@ flowchart LR
 1. 앱 시작: GameInstance가 슬롯을 불러온다. 없으면 GDD 시작 조건 값으로 시작한다.
 2. 로비: 위젯이 GameInstance의 구매 함수를 부르고, 성공하면 저장한 뒤 변경을 알린다.
 3. 영업 시작: BP가 L_Business을 연다 → ABusinessGameMode BeginPlay가 GameInstance에서 진행 값 · 기획 데이터를 받아 `FBusinessSim`의 하루를 시작한다.
-4. 영업 중: 위젯의 탭은 ABusinessGameMode의 입력 함수로 들어가 Now와 함께 `FBusinessSim`에 전달된다. 타이머가 울리면 `Advance(Now)`를 부른다. 두 경우 모두 `FBusinessSim`이 이번 호출로 바뀐 부분을 플래그(`EBusinessChange`, 3.6)로 돌려주고, ABusinessGameMode가 그 영역의 델리게이트로 위젯에 알린 뒤 타이머를 다시 건다.
+4. 영업 중: 위젯의 탭은 ABusinessGameMode의 입력 함수로 들어가 Now와 함께 `FBusinessSim`에 전달된다. 타이머가 울리면 `ProcessDueEvents(Now)`를 부른다. 두 경우 모두 `FBusinessSim`이 이번 호출로 바뀐 부분을 플래그(`EBusinessChange`, 3.6)로 돌려주고, ABusinessGameMode가 그 영역의 델리게이트로 위젯에 알린 뒤 타이머를 다시 건다.
 5. 영업 종료: 영업 종료 이벤트에서 ABusinessGameMode가 하루 결과를 GameInstance에 넘긴다 → `FShopProgress`가 골드 · 일차를 갱신하고 파산을 판정한다 → 저장(게임 오버면 저장 초기화) → 결산 또는 게임 오버 팝업.
 - 로직은 위젯을 모른다. 위젯은 ABusinessGameMode · GameInstance의 BP 노출 함수와 델리게이트만 쓴다(CLAUDE.md 46 · 75행).
 
@@ -128,7 +128,7 @@ flowchart LR
 - 시간 이벤트 5종(손님 도착 · 손님 인내심 만료 · 찜기 재생성 완료 · 작업대 연출 끝 · 영업 종료)을 모두 하나의 만료 시각 최소 힙(`TArray::HeapPush` / `HeapPop` + 시각 비교 술어, `Runtime/Core/Public/Containers/Array.h`)에 넣는다(D1). ABusinessGameMode는 `FTimerHandle` 하나를 "힙 맨 앞 시각 − Now" 뒤로 건다.
 - 같은 시각의 이벤트는 넣은 순서대로 처리한다. TArray 힙은 같은 키의 순서를 보장하지 않으므로, 이벤트에 증가하는 순번을 두고 술어가 (시각, 순번) 순으로 비교한다. 순번 변수는 '정확성: 처리 순서를 테스트로 재현' 때문에 둔다.
 - 구매로 먼저 떠난 손님의 만료 이벤트는 힙에 남겨 두고, 꺼낼 때 그 손님이 아직 대기 중인지 손님 ID로 확인해 아니면 버린다(지연 삭제, D2). 영업 종료 때 힙을 통째로 비운다.
-- `Advance(Now)`는 Now 이하인 이벤트를 모두 꺼내 처리하므로, 다시 거는 간격은 항상 0보다 크다. 간격이 0 이하면 타이머가 등록되지 않는다(`Runtime/Engine/Private/TimerManager.cpp` 595행 `if (InRate > 0.f)`).
+- `ProcessDueEvents(Now)`는 Now 이하인 이벤트를 모두 꺼내 처리하므로, 다시 거는 간격은 항상 0보다 크다. 간격이 0 이하면 타이머가 등록되지 않는다(`Runtime/Engine/Private/TimerManager.cpp` 595행 `if (InRate > 0.f)`).
 - 입력 처리로 새 이벤트가 생기면(예: 찜기 탭 → 감싸기 끝 시각) 입력 처리 뒤에도 타이머를 다시 건다.
 - 화면의 남은 시간 · 인내심 게이지는 위젯이 "원본 시각 − 현재 월드 시각"으로 계산한다(CLAUDE.md 51행). 원본 시각은 BP 노출 조회 함수로 읽는다.
 - 힙 크기 n (ADR-0003 요구): 대기 손님 수(MaxQueue 이하) + 지연 삭제로 남은 원소(하루 손님 수 이하) + 손님 외 이벤트(종류별 최대 1개, 4개). MaxQueue는 화면 슬롯 수인 5 이하다(data-schema.md, 5단계 초안 3~5) → n은 수십 이하. TArray 힙 함수를 쓰면 코드 양이 선형 탐색(Add + 최소값 탐색)과 비슷하므로, 코드를 늘리지 않고 O(n) → O(log n)을 얻는다.
@@ -260,16 +260,16 @@ flowchart LR
 | 파일 (`Source/AIGame/`) | 내용 |
 |---|---|
 | `AIGame.h` · `AIGame.cpp` | `LogAIGame` 로그 카테고리 선언 · 정의 — 지금은 없다(CLAUDE.md 94행) |
-| `ShopTypes.h` · `ShopTypes.cpp` | 공용 enum · 구조체 · 데이터 행, `IsBaseIngredient` |
-| `ShopProgress.h` · `ShopProgress.cpp` | `FShopProgress` |
-| `ShopSaveGame.h` | `UShopSaveGame` |
-| `ShopGameInstance.h` · `ShopGameInstance.cpp` | `UShopGameInstance` |
-| `BusinessSim.h` · `BusinessSim.cpp` | `FBusinessSim`과 내부 타입(UHT 대상 아님) |
-| `BusinessGameMode.h` · `BusinessGameMode.cpp` | `ABusinessGameMode` |
+| `Shop/ShopTypes.h` · `Shop/ShopTypes.cpp` | 공용 enum · 구조체 · 데이터 행, `IsBaseIngredient` |
+| `Shop/ShopProgress.h` · `Shop/ShopProgress.cpp` | `FShopProgress` |
+| `Shop/ShopSaveGame.h` | `UShopSaveGame` |
+| `Shop/ShopGameInstance.h` · `Shop/ShopGameInstance.cpp` | `UShopGameInstance` |
+| `Business/BusinessSim.h` · `Business/BusinessSim.cpp` | `FBusinessSim`과 내부 타입(UHT 대상 아님) |
+| `Business/BusinessGameMode.h` · `Business/BusinessGameMode.cpp` | `ABusinessGameMode` |
 | `Private/Tests/BusinessSimTests.cpp` · `Private/Tests/ShopProgressTests.cpp` | 자동화 테스트(ADR-0007) |
-- 파일은 모듈 폴더 바로 아래에 둔다(지금 모듈 구조와 같음) [AI 판단].
+- Shop으로 시작하는 파일은 `Shop/`, Business로 시작하는 파일은 `Business/`에 둔다. 모듈 파일(`AIGame.*` · Build.cs)과 `Private/Tests`는 모듈 폴더에 그대로 둔다 (사용자 결정, T08 뒤 폴더 정리).
 - Build.cs: 추가 모듈 없음. 쓰는 기능(DataTable · GameplayStatics · SaveGame · TimerManager · Texture2D)이 모두 `Engine` 모듈이다.
-- Build.cs: `PrivateIncludePaths.Add(ModuleDirectory)` (T02 사용자 결정). `Private/Tests`의 테스트가 모듈 루트 헤더를 `"ShopProgress.h"`처럼 이름만으로 include한다. `BuildSettingsVersion.V5`에서는 모듈 루트가 기본 탐색 경로에 없다(UBT `ModuleRules.cs` 1418행 · `UEBuildModuleCPP.cs` 259행). `"AIGame/ShopProgress.h"`(UBT가 넣는 `Source` 경로)는 경로인지 모듈 이름인지 헷갈려서 쓰지 않는다.
+- Build.cs: `PrivateIncludePaths.Add(ModuleDirectory)` (T02 사용자 결정). 폴더를 넘는 include는 모듈 루트 기준 경로(`"Shop/ShopProgress.h"`)로 쓰고, 같은 폴더끼리는 이름만 쓴다. `BuildSettingsVersion.V5`에서는 모듈 루트가 기본 탐색 경로에 없다(UBT `ModuleRules.cs` 1418행 · `UEBuildModuleCPP.cs` 259행). `"AIGame/ShopProgress.h"`(UBT가 넣는 `Source` 경로)는 경로인지 모듈 이름인지 헷갈려서 쓰지 않는다.
 
 ### 3.2 공용 타입 — ShopTypes.h
 ```cpp
@@ -613,6 +613,10 @@ public:
 private:
 	static constexpr const TCHAR* SaveSlotName = TEXT("Progress");
 	static constexpr int32 SaveUserIndex = 0;
+	/** 손님 줄 화면 슬롯 수(ADR-0009). Days.MaxQueue의 상한 */
+	static constexpr int32 QueueSlotCount = 5;
+	/** Balance DataTable의 유일한 행 이름(ADR-0013) */
+	static constexpr const TCHAR* BalanceRowName = TEXT("Default");
 
 	UPROPERTY(EditDefaultsOnly)
 	TObjectPtr<UDataTable> IngredientTable;
@@ -652,7 +656,7 @@ private:
 #include "CoreMinimal.h"
 #include "Math/RandomStream.h"
 #include "Misc/Optional.h"
-#include "ShopTypes.h"
+#include "Shop/ShopTypes.h"
 
 /** 작업대 입력 종류. 전이표의 열 */
 enum class EWorkbenchInput : uint8
@@ -746,7 +750,7 @@ public:
 	 * Now 이하인 이벤트를 (시각, 순번) 순으로 모두 처리한다.
 	 * 입력 처리 뒤에도 부른다 — 잠금 시간이 0이면 이벤트 시각이 Now와 같아 타이머로는 처리되지 않는다.
 	 */
-	EBusinessChange Advance(double Now);
+	EBusinessChange ProcessDueEvents(double Now);
 
 	/** 힙 맨 앞 이벤트 시각. 영업이 끝나 힙이 비면 unset */
 	TOptional<double> GetNextEventTime() const;
@@ -823,7 +827,7 @@ private:
 - Wrapping · Trash 행은 입력 잠금으로도 막히지만, 표 자체도 무시로 정의해 잠금 시간이 0이어도 안전하다.
 - 받아들인 재료통 · 찜기 탭은 결과가 쓰레기여도 재료비를 차감한다(GDD "클릭해 작업대에 올리는 순간 차감", "쓰레기 4번도 떡 1개 소모"). 쓰레기 수는 판정 순간에 센다.
 
-이벤트 처리 (`Advance`)
+이벤트 처리 (`ProcessDueEvents`)
 | 이벤트 | 처리 | 바뀐 부분 |
 |---|---|---|
 | CustomerArrive | ① 다음 도착 예약: Event.Time + FRandRange(ArrivalMin, ArrivalMax) ② 주문: FRand() < AnyOrderRate면 "아무거나", 아니면 해금 베이스 중 가중치 1개 + 과일(없음 = NoFruitWeight) 중 가중치 1개 ③ 재고 먼저(D13): 원하는 조합이 진열대에 있으면("아무거나"는 재고가 하나라도 있으면, 진열 개수 비례로 1개 — D12) 바로 판매(`Sell(…, INDEX_NONE)`), 대기열에 들어가지 않는다 ④ 재고가 없고 대기열이 MaxQueue 이상이면 오지 않는다(놓친 손님에 넣지 않음, D14) ⑤ 대기열 끝에 넣기: Id, LookIndex = RandRange(0, LookCount − 1), ExpireTime = Now + Patience, CustomerExpire 이벤트 | Customers (재고 구매면 Shelf · Gold) |
@@ -948,7 +952,7 @@ private:
 	FTimerHandle SimTimerHandle;
 
 	/**
-	 * 모든 Sim 호출 뒤에 부른다. Advance(Now)로 Now 이하 이벤트를 마저 처리하고, 바뀐 부분의 델리게이트를 보낸 뒤,
+	 * 모든 Sim 호출 뒤에 부른다. ProcessDueEvents(Now)로 Now 이하 이벤트를 마저 처리하고, 바뀐 부분의 델리게이트를 보낸 뒤,
 	 * 영업 종료면 결산(GameInstance::ApplyDayResult → OnDayEnded), 아니면 다음 이벤트 시각으로 타이머를 다시 건다.
 	 * 타이머 콜백으로도 쓴다(Changes = None을 payload로 바인딩).
 	 */
@@ -1066,7 +1070,7 @@ sequenceDiagram
 
     Note over W,E: 손님 도착 (t = 3)
     E->>GM: 타이머 → HandleChanges(None)
-    GM->>Sim: Advance(3)
+    GM->>Sim: ProcessDueEvents(3)
     Note right of Sim: CustomerArrive — 다음 도착 예약<br/>주문 팥+딸기, 재고 없음, 대기열 여유<br/>손님1 입장, 인내심 만료 33 예약
     Sim-->>GM: Customers
     GM->>W: OnCustomersChanged → 슬롯0 = 손님1
@@ -1088,7 +1092,7 @@ sequenceDiagram
 
     Note over W,E: 배분 (t = 6.8)
     E->>GM: 타이머 → HandleChanges(None)
-    GM->>Sim: Advance(6.8)
+    GM->>Sim: ProcessDueEvents(6.8)
     Note right of Sim: WorkbenchDone — 팥+딸기 완성<br/>대기열 앞에서부터: 손님1 일치 → Sell<br/>손님1의 만료 33은 힙에 남음(지연 삭제)
     Sim-->>GM: Workbench + Customers + Gold
     GM->>W: 작업대 · 슬롯0 비움, 골드 갱신
@@ -1096,7 +1100,7 @@ sequenceDiagram
 
     Note over W,E: 영업 종료 · 결산 · 저장 (t = 180)
     E->>GM: 타이머 → HandleChanges(None)
-    GM->>Sim: Advance(180)
+    GM->>Sim: ProcessDueEvents(180)
     Note right of Sim: DayEnd — 진열 개수 + 작업대 → 폐기 수<br/>대기열 · 진열대 · 작업대 · 힙 비움
     Sim-->>GM: 전부 + DayEnded
     GM->>W: 영역별 델리게이트 (빈 화면)
@@ -1122,7 +1126,7 @@ sequenceDiagram
     Note right of Sim: Base → Wrapping, WorkbenchDone 180.3 예약
     GM->>W: OnWorkbenchChanged(Wrapping) → 감싸기 연출 시작
     Note over GM,Sim: t = 180 타이머
-    GM->>Sim: Advance(180)
+    GM->>Sim: ProcessDueEvents(180)
     Note right of Sim: 힙 맨 앞은 DayEnd 180 (WorkbenchDone 180.3보다 빠름)<br/>작업대 Wrapping → 폐기 수 +1 (GDD: 작업대 위 재료는 폐기)<br/>작업대 Empty로 되돌림, 힙 비움 → WorkbenchDone 180.3도 사라짐
     Sim-->>GM: 전부 + DayEnded
     GM->>W: OnWorkbenchChanged(Empty) → 감싸기 연출 중단
@@ -1316,7 +1320,7 @@ GDD의 규칙 한 줄마다 담당 클래스 · 함수와 검증 방법을 잇�
 | R44 | 게임 오버 확정 즉시 저장 초기화 (저장) | `UShopGameInstance::ApplyDayResult` | 수동 |
 | R45 | 하루 임대료 = 기본 + 해금한 재료별 증가분, 영업 시작 때 차감, 결산 순이익에 포함 (경제 · D16~D18) | `FBusinessSim::StartDay` · `GetCurrentGold`, `FShopProgress::ApplyDayResult` | 자동 `AIGame.BusinessSim.Rent.ChargedAtStart` · `AIGame.ShopProgress.RentInSettlement` |
 | R46 | 요거트 · 파인애플 · 두바이초코 해금 때 임대료가 올라, 실수가 많은 플레이는 해금 직후 파산 위험이 커진다 (빚과 파산 · D18) | 데이터(Ingredients.RentIncrease), 로비의 다음 해금 표시 | `Scripts/balance_sim.py` 결과(data-schema.md 수치 초안) + 수동 로비 |
-| T1 | 이벤트 힙 + Timer 1개, Tick 없음 (기술 포인트 1 · D1) | `FBusinessSim::EventHeap` · `PushEvent` · `Advance`, `ABusinessGameMode::HandleChanges` | 자동 `AIGame.BusinessSim.Events.SameTimeOrder` · `ZeroLockProcessed` |
+| T1 | 이벤트 힙 + Timer 1개, Tick 없음 (기술 포인트 1 · D1) | `FBusinessSim::EventHeap` · `PushEvent` · `ProcessDueEvents`, `ABusinessGameMode::HandleChanges` | 자동 `AIGame.BusinessSim.Events.SameTimeOrder` · `ZeroLockProcessed` |
 | T2 | 전이표를 자동화 테스트로 검증 (기술 포인트 2) | `NextWorkbenchState` | 자동 `AIGame.BusinessSim.Workbench.TransitionTable` |
 | T3 | 배분 · 시드 고정 재현 (기술 포인트 3 · D3) | 배분 선형 탐색, `FRandomStream` | 자동 `AIGame.BusinessSim.Random.SameSeedSameDay` |
 | T4 | 데이터 주도 조합 · 경제 (기술 포인트 4 · D10) | DataTable 4개, `FillDayInput` | 5단계 + 수동 |

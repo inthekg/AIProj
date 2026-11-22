@@ -1,5 +1,5 @@
 #include "Misc/AutomationTest.h"
-#include "ShopProgress.h"
+#include "Shop/ShopProgress.h"
 
 // WITH_DEV_AUTOMATION_TESTS는 UBT가 정의하고 Shipping에서는 0이다 (UEBuildTarget.cs)
 #if WITH_DEV_AUTOMATION_TESTS

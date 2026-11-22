@@ -2,7 +2,6 @@
 
 FShopProgress FShopProgress::MakeNew(int32 StartGold)
 {
-	// 시작 조건(GDD 하루 진행)의 원본은 멤버 기본값이다. 데이터에서 오는 값은 StartGold뿐이다
 	FShopProgress Progress;
 	Progress.Gold = StartGold;
 	return Progress;

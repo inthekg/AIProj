@@ -229,11 +229,10 @@ struct FBalanceRow : public FTableRowBase
 	UPROPERTY(EditAnywhere, BlueprintReadOnly) 
 	int32 RiceCakeCost = 0;
 
-	/** '과일 없음' 가중치. 과일 행의 FIngredientRow::OrderWeight와 함께 비교한다 */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly) 
 	int32 NoFruitWeight = 0;
 
-	/** 조합 판매가 배수(공식: GDD 경제) */
+	/** 조합 판매가 배수 */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly) 
 	float MixMultiplier = 0.f;
 
@@ -252,7 +251,6 @@ struct FBalanceRow : public FTableRowBase
 	UPROPERTY(EditAnywhere, BlueprintReadOnly) 
 	int32 MaxStockPerRecipe = 0;
 
-	/** 계산: ADR-0016 · ADR-0017 */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	int32 BaseRent = 0;
 
