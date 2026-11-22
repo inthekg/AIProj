@@ -648,6 +648,7 @@ private:
 - `Shutdown`: `RemoveAll(this)` → Super.
 - `ApplyDayResult`: `Progress.ApplyDayResult` → GameOver면 `Progress = FShopProgress::MakeNew(GetBalance().StartGold)` → `SaveProgress`.
 - 재료 이미지(EIngredient → 텍스처)와 재료통 이미지(EIngredient → 텍스처, 2026-11-22 추가: docs/02_design/art-style.md 3.6)는 BP_ShopGameInstance의 BP 변수다(ADR-0014). C++은 쓰지 않으므로 선언하지 않는다.
+  - 변수 (T04 사용자 결정, 2026-11-22): 셋 다 Map(키 `EIngredient` → 값 `Texture2D` Object Reference), 키는 재료 7개(`None` 제외). `IngredientImages` = T_Ing_*, `IngredientSmallImages` = T_Ing_*_S(말풍선 · 진열 80px, art-style.md 2장), `BinImages` = T_Bin_*. 위젯은 GI를 BP_ShopGameInstance로 Cast해 읽는다.
 
 ### 3.6 FBusinessSim — BusinessSim.h
 ```cpp
