@@ -3,6 +3,9 @@
 #include "AIGame.h"
 #include "Business/BusinessSim.h"
 #include "Engine/DataTable.h"
+#include "Kismet/GameplayStatics.h"
+#include "Misc/CoreDelegates.h"
+#include "ShopSaveGame.h"
 
 void UShopGameInstance::Init()
 {
@@ -56,9 +59,29 @@ void UShopGameInstance::Init()
 			TEXT("Steamer %d: UpgradeCost (%d) must be > 0"), Level, Row->UpgradeCost);
 	}
 
-	Progress = FShopProgress::MakeNew(Balance.StartGold);
+	// 슬롯이 없으면 LoadGameFromSlot이 nullptr을 돌려준다
+	const UShopSaveGame* Loaded = Cast<UShopSaveGame>(UGameplayStatics::LoadGameFromSlot(SaveSlotName, SaveUserIndex));
+	if (Loaded && Loaded->SaveVersion == UShopSaveGame::CurrentVersion)
+	{
+		Progress = Loaded->Progress;
+	}
+	else
+	{
+		UE_LOG(LogAIGame, Warning, TEXT("No valid save (missing or SaveVersion != %d) in slot '%s'. Starting a new game."),
+			UShopSaveGame::CurrentVersion, SaveSlotName);
+		Progress = FShopProgress::MakeNew(Balance.StartGold);
+	}
 	UE_LOG(LogAIGame, Log, TEXT("Data validation passed. Day=%d Gold=%d UnlockStep=%d SteamerLevel=%d"),
 		Progress.Day, Progress.Gold, Progress.UnlockStep, Progress.SteamerLevel);
+
+	// 레벨을 구분하지 않고 저장한다(architecture.md 1.7)
+	FCoreDelegates::ApplicationWillEnterBackgroundDelegate.AddUObject(this, &UShopGameInstance::SaveProgress);
+}
+
+void UShopGameInstance::Shutdown()
+{
+	FCoreDelegates::ApplicationWillEnterBackgroundDelegate.RemoveAll(this);
+	Super::Shutdown();
 }
 
 void UShopGameInstance::GetUnlockedIngredients(TArray<EIngredient>& OutBases, TArray<EIngredient>& OutFruits) const
@@ -118,6 +141,7 @@ bool UShopGameInstance::TryUnlockNext()
 		return false;
 	}
 	++Progress.UnlockStep;
+	SaveProgress();
 	OnProgressChanged.Broadcast();
 	return true;
 }
@@ -145,6 +169,7 @@ bool UShopGameInstance::TryUpgradeSteamer()
 		return false;
 	}
 	++Progress.SteamerLevel;
+	SaveProgress();
 	OnProgressChanged.Broadcast();
 	return true;
 }
@@ -189,6 +214,7 @@ EDayOutcome UShopGameInstance::ApplyDayResult(const FDayResult& Result)
 	{
 		Progress = FShopProgress::MakeNew(GetBalance().StartGold);
 	}
+	SaveProgress();
 	return Outcome;
 }
 
@@ -201,4 +227,19 @@ const FIngredientRow* UShopGameInstance::FindIngredientRow(EIngredient Ingredien
 const FSteamerRow* UShopGameInstance::FindSteamerRow(int32 Level) const
 {
 	return SteamerTable->FindRow<FSteamerRow>(FName(*FString::FromInt(Level)), TEXT("UShopGameInstance::FindSteamerRow"), false);
+}
+
+void UShopGameInstance::SaveProgress() const
+{
+	UShopSaveGame* SaveObject = CastChecked<UShopSaveGame>(UGameplayStatics::CreateSaveGameObject(UShopSaveGame::StaticClass()));
+	SaveObject->Progress = Progress;
+
+	// 동기 저장 - 백그라운드 저장 완료 보장
+	if (!UGameplayStatics::SaveGameToSlot(SaveObject, SaveSlotName, SaveUserIndex))
+	{
+		UE_LOG(LogAIGame, Error, TEXT("Failed to save progress to slot '%s'"), SaveSlotName);
+		return;
+	}
+	UE_LOG(LogAIGame, Log, TEXT("Progress saved. Day=%d Gold=%d UnlockStep=%d SteamerLevel=%d"),
+		Progress.Day, Progress.Gold, Progress.UnlockStep, Progress.SteamerLevel);
 }

@@ -532,7 +532,7 @@ class UShopSaveGame : public USaveGame
 	GENERATED_BODY()
 
 public:
-	/** 저장 필드를 바꾸면 올린다(CLAUDE.md 54행) */
+	/** 저장 필드를 바꾸면 올린다 */
 	static constexpr int32 CurrentVersion = 1;
 
 	UPROPERTY()
@@ -639,12 +639,14 @@ private:
 	/** 행 이름 = 레벨 숫자. 최대 레벨을 넘으면 nullptr */
 	const FSteamerRow* FindSteamerRow(int32 Level) const;
 
-	/** 진행 값을 슬롯에 쓴다. 실패하면 UE_LOG(LogAIGame, Error). 앱 백그라운드 진입 때도 불린다 */
+	/** 진행 값을 슬롯에 쓰고 결과를 LogAIGame에 남긴다(실패는 Error). 앱 백그라운드 진입 때도 불린다 */
 	void SaveProgress() const;
 };
 ```
 처리 메모
 - `Init`: Super → 데이터 검증(data-schema.md '데이터 검증', 없으면 `checkf`) → 슬롯 불러오기(없거나 SaveVersion이 다르면 `MakeNew` + 경고 로그) → `FCoreDelegates::ApplicationWillEnterBackgroundDelegate.AddUObject(this, &UShopGameInstance::SaveProgress)`. 검증 · 불러오기는 Init에서만 쓰므로 함수로 나누지 않는다.
+- 불러온 진행 값의 범위(SteamerLevel · UnlockStep 등)는 검사하지 않는다(T05 사용자 결정). 그래서 Data/*.csv의 행을 수정하면 `Saved/SaveGames/Progress.sav`를 지운 뒤 PIE를 시작한다. 예: Steamer 행이 줄면 저장된 SteamerLevel의 행이 없어 `FillDayInput`에서 null을 역참조한다.
+- `SaveProgress`: 성공하면 `LogAIGame` Log로 진행 값을 남긴다 — PIE에서 결산 · 구매 저장을 확인하는 로그(T05 완료 조건, 사용자 결정).
 - `Shutdown`: `RemoveAll(this)` → Super.
 - `ApplyDayResult`: `Progress.ApplyDayResult` → GameOver면 `Progress = FShopProgress::MakeNew(GetBalance().StartGold)` → `SaveProgress`.
 - 재료 이미지(EIngredient → 텍스처)와 재료통 이미지(EIngredient → 텍스처, 2026-11-22 추가: docs/02_design/art-style.md 3.6)는 BP_ShopGameInstance의 BP 변수다(ADR-0014). C++은 쓰지 않으므로 선언하지 않는다.
