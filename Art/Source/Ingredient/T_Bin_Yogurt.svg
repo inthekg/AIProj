@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="320" height="176" viewBox="0 0 320 176">
+  <!-- 재료통 베이스 칸: 요거트 (art-style.md 3.6) -->
+  <defs>
+    <clipPath id="opening">
+      <rect x="18" y="16" width="284" height="120" rx="14"/>
+    </clipPath>
+  </defs>
+  <rect class="wood line-m" x="3" y="3" width="314" height="170" rx="22"/>
+  <rect class="wood" x="18" y="16" width="284" height="120" rx="14"/>
+  <g clip-path="url(#opening)">
+    <path class="white line-m" d="M 10 44 Q 160 4 310 44 L 310 150 L 10 150 Z"/>
+    <path class="line-s" fill="none" d="M 116 72 Q 160 54 204 72 Q 180 88 150 80"/>
+    <path class="line-s" fill="none" d="M 60 108 Q 92 96 124 108"/>
+    <path class="line-s" fill="none" d="M 196 112 Q 228 100 260 112"/>
+  </g>
+  <rect class="line-m" fill="none" x="18" y="16" width="284" height="120" rx="14"/>
+  <path class="line-s" fill="none" d="M 14 152 L 306 152"/>
+</svg>

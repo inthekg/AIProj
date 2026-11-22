@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="320" height="320" viewBox="0 0 320 320">
+  <!-- 단독 과일: 망고 + 잎, 바닥 그림자 없음 (art-style.md 3.6) -->
+  <rect class="choco line" x="110" y="46" width="14" height="40" rx="7" transform="rotate(-20 117 66)"/>
+  <path class="orange line" d="M 92 236 C 52 196, 60 116, 120 86 C 176 58, 252 82, 268 146 C 282 204, 244 268, 180 280 C 140 288, 112 260, 92 236 Z"/>
+  <path class="green line" d="M 124 66 C 150 34, 200 30, 232 46 C 204 70, 160 80, 124 66 Z"/>
+  <path class="line-s" fill="none" d="M 132 63 C 162 54, 192 48, 224 47"/>
+</svg>

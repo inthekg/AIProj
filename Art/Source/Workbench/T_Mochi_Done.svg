@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="320" height="320" viewBox="0 0 320 320">
+  <!-- 완성 모찌 1종 (작업대 완성 연출 전용, art-pipeline.md D7). 바닥선 y 276 (art-style.md 3.6) -->
+  <defs>
+    <path id="body" d="M 44 214 C 44 136, 98 92, 160 92 C 222 92, 276 136, 276 214 C 276 254, 236 274, 160 274 C 84 274, 44 254, 44 214 Z"/>
+  </defs>
+
+  <ellipse class="shade" cx="160" cy="276" rx="124" ry="16"/>
+  <use href="#body" class="white line"/>
+</svg>

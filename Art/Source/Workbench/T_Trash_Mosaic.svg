@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="320" height="320" viewBox="0 0 320 320">
+  <!-- 쓰레기 모자이크: 작업대 재료가 모자이크로 바뀐 뒤 화면 아래로 버려진다(GDD 제작). 외곽선 없이 타일 가장자리가 들쭉날쭉, 움직이므로 바닥 그림자 없음 -->
+  <rect class="red" x="96" y="96" width="32" height="32"/>
+  <rect class="choco" x="128" y="96" width="32" height="32"/>
+  <rect class="orange" x="160" y="96" width="32" height="32"/>
+  <rect class="yellow" x="192" y="96" width="32" height="32"/>
+  <rect class="bean" x="64" y="128" width="32" height="32"/>
+  <rect class="blue" x="96" y="128" width="32" height="32"/>
+  <rect class="green" x="128" y="128" width="32" height="32"/>
+  <rect class="choco" x="160" y="128" width="32" height="32"/>
+  <rect class="red" x="192" y="128" width="32" height="32"/>
+  <rect class="bean" x="224" y="128" width="32" height="32"/>
+  <rect class="choco" x="64" y="160" width="32" height="32"/>
+  <rect class="bean" x="96" y="160" width="32" height="32"/>
+  <rect class="choco" x="128" y="160" width="32" height="32"/>
+  <rect class="orange" x="160" y="160" width="32" height="32"/>
+  <rect class="blue" x="192" y="160" width="32" height="32"/>
+  <rect class="green" x="224" y="160" width="32" height="32"/>
+  <rect class="red" x="32" y="192" width="32" height="32"/>
+  <rect class="bean" x="64" y="192" width="32" height="32"/>
+  <rect class="blue" x="96" y="192" width="32" height="32"/>
+  <rect class="yellow" x="128" y="192" width="32" height="32"/>
+  <rect class="choco" x="160" y="192" width="32" height="32"/>
+  <rect class="red" x="192" y="192" width="32" height="32"/>
+  <rect class="choco" x="224" y="192" width="32" height="32"/>
+  <rect class="green" x="64" y="224" width="32" height="32"/>
+  <rect class="bean" x="96" y="224" width="32" height="32"/>
+  <rect class="choco" x="128" y="224" width="32" height="32"/>
+  <rect class="bean" x="160" y="224" width="32" height="32"/>
+  <rect class="blue" x="192" y="224" width="32" height="32"/>
+  <rect class="green" x="224" y="224" width="32" height="32"/>
+  <rect class="choco" x="256" y="224" width="32" height="32"/>
+  <rect class="orange" x="96" y="256" width="32" height="32"/>
+  <rect class="yellow" x="128" y="256" width="32" height="32"/>
+  <rect class="choco" x="160" y="256" width="32" height="32"/>
+  <rect class="bean" x="192" y="256" width="32" height="32"/>
+</svg>

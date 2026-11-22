@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="320" height="320" viewBox="0 0 320 320">
+  <!-- 단독 베이스: 팥 (art-style.md 3.6) -->
+  <ellipse class="shade" cx="160" cy="276" rx="118" ry="16"/>
+  <path class="bean line" d="M 44 246 C 44 160, 98 104, 160 104 C 222 104, 276 160, 276 246 C 276 266, 254 274, 226 274 L 94 274 C 66 274, 44 266, 44 246 Z"/>
+  <ellipse class="bean line-s" cx="112" cy="168" rx="15" ry="10" transform="rotate(-20 112 168)"/>
+  <ellipse class="bean line-s" cx="176" cy="150" rx="15" ry="10" transform="rotate(15 176 150)"/>
+  <ellipse class="bean line-s" cx="214" cy="204" rx="15" ry="10" transform="rotate(-10 214 204)"/>
+  <ellipse class="bean line-s" cx="128" cy="226" rx="15" ry="10" transform="rotate(10 128 226)"/>
+  <ellipse class="bean line-s" cx="190" cy="240" rx="15" ry="10" transform="rotate(-25 190 240)"/>
+  <ellipse class="bean line-s" cx="86" cy="214" rx="15" ry="10" transform="rotate(20 86 214)"/>
+</svg>

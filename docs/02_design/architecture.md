@@ -161,7 +161,7 @@ flowchart LR
 | D6 | 손님 외형은 도착 때 무작위(시드 고정 난수), `FCustomer`에 외형 번호 | ADR-0009 |
 | D7 | 제품 이미지는 베이스 + 과일 이미지 겹치기 | ADR-0010 |
 | D8 | 진열대 조합당 상한 5. 찬 조합이 또 완성되고 기다리는 손님이 없으면 폐기 | ADR-0011 |
-| D9 | 진열대는 조합당 칸 1개(제품 이미지 + 개수 숫자), 3행 × 5열, 처음 진열된 순서로 한 행씩 채움, 행 위치는 행 수에 따라 균등 | ADR-0012 |
+| D9 | 진열대는 조합당 칸 1개(제품 이미지 + 개수 점), 2행 × 8열(2026-11-22 보완), 처음 진열된 순서로 한 행씩 채움, 행 위치는 행 수에 따라 균등 | ADR-0012 |
 | D10 | (2단계) 종류는 enum + switch, 수치는 CSV → DataTable | ADR-0013 |
 | D11 | (2단계) 이미지 에셋 참조는 BP 기본값. 손님 외형 수는 그 배열 길이 | ADR-0014 |
 | D12~D15 | (3단계) GDD에 없던 규칙 4건 — 3.11 | ADR-0015 |
@@ -205,13 +205,13 @@ flowchart LR
   - 슬롯 구성: 사람 이미지(외형 번호로 선택) + 머리 위 말풍선(베이스 아이콘 + 과일 아이콘, 또는 "아무거나" 아이콘) + 인내심 게이지("만료 시각 − 현재 월드 시각")
   - 외형: 도착 때 `FRandomStream`으로 0 ~ (외형 수 − 1) 중 하나를 고른다. 외형 수는 BP에서 채운 사람 이미지 배열의 길이다(ADR-0014). 데이터에 따로 두지 않는다.
   - 화면 슬롯이 5개이므로 MaxQueue(일차별 수치)는 5 이하
-- 진열대 (ADR-0012): 3행 × 5열 = 15칸. 조합 최대 15종이 모두 들어간다.
-  - 칸 하나 = 조합 하나: 제품 이미지 1장 + 그 위에 진열 개수(1~5) 숫자. 위젯 칸 15개를 미리 두고 칸 i ← 진열 목록 i번째, 남는 칸은 숨긴다.
+- 진열대 (ADR-0012, 2026-11-22 보완): 2행 × 8열 = 16칸. 조합 최대 15종이 모두 들어간다.
+  - 칸 하나 = 조합 하나: 제품 이미지 1장 + 그 아래 진열 개수 점(점 수 = `MaxStockPerRecipe`, 진열 개수만큼 채움). 위젯 칸 15개를 미리 두고 칸 i ← 진열 목록 i번째, 남는 칸은 숨긴다.
   - 제품 이미지: 베이스 이미지 위에 과일 이미지를 겹친다(과일 없음이면 베이스만). 같은 재료 이미지는 모든 제품이 같은 텍스처 에셋을 공유한다(플라이웨이트, ADR-0010).
-  - 채우는 순서: 처음 진열된 순서대로 한 행(왼쪽 → 오른쪽 5칸)을 채운 뒤 다음 행으로 넘어간다. 개수가 0이 되면 그 칸을 빼고 뒤 칸이 앞으로 당겨진다. 다시 만들어지면 맨 뒤에 붙는다.
-  - 행 위치: 행 수 n = ⌈칸 수 / 5⌉. k번째 행(1부터)의 세로 중심 = 진열대 높이 × k / (n + 1).
-    - 1행: 0.5(중앙) · 2행: 0.33, 0.67 · 3행: 0.25, 0.5, 0.75
-    - 행 수가 바뀔 때(칸 수가 5 · 10을 넘거나 그 아래로 내려갈 때)만 다시 계산한다. 이 배치 계산은 위젯(BP) 연출이다.
+  - 채우는 순서: 처음 진열된 순서대로 한 행(8칸)을 채운 뒤 다음 행으로 넘어간다. 행 안에서는 순서대로 왼쪽 → 오른쪽이고, 행마다 가운데 정렬한다(칸이 늘면 앞 칸이 왼쪽으로 밀린다, 2026-11-22 보완: docs/02_design/art-style.md 1.1). 이 가로 배치도 위젯(BP) 연출이다. 개수가 0이 되면 그 칸을 빼고 뒤 칸이 앞으로 당겨진다. 다시 만들어지면 맨 뒤에 붙는다.
+  - 행 위치: 행 수 n = ⌈칸 수 / 8⌉ (≤ 2). k번째 행(1부터)의 세로 중심 = 진열대 높이 × k / (n + 1).
+    - 1행: 0.5(중앙) · 2행: 0.33, 0.67
+    - 행 수가 바뀔 때(칸 수가 8을 넘거나 그 아래로 내려갈 때)만 다시 계산한다. 이 배치 계산은 위젯(BP) 연출이다.
 - 완성품 배분 순서: ① 그 조합 또는 "아무거나"를 주문한 가장 먼저 온 손님(ADR-0006) ② 그 조합 재고가 상한 미만이면 진열대 ③ 아니면 폐기(재료비는 이미 차감됨, 결산 폐기 수 +1)(ADR-0011)
 - 이미지 에셋 참조는 BP 기본값에 둔다(ADR-0014, data-schema.md 'CSV 밖에 두는 것').
 
@@ -643,7 +643,7 @@ private:
 - `Init`: Super → 데이터 검증(data-schema.md '데이터 검증', 없으면 `checkf`) → 슬롯 불러오기(없거나 SaveVersion이 다르면 `MakeNew` + 경고 로그) → `FCoreDelegates::ApplicationWillEnterBackgroundDelegate.AddUObject(this, &UShopGameInstance::SaveProgress)`. 검증 · 불러오기는 Init에서만 쓰므로 함수로 나누지 않는다.
 - `Shutdown`: `RemoveAll(this)` → Super.
 - `ApplyDayResult`: `Progress.ApplyDayResult` → GameOver면 `Progress = FShopProgress::MakeNew(GetBalance().StartGold)` → `SaveProgress`.
-- 재료 이미지(EIngredient → 텍스처)는 BP_ShopGameInstance의 BP 변수다(ADR-0014). C++은 쓰지 않으므로 선언하지 않는다.
+- 재료 이미지(EIngredient → 텍스처)와 재료통 이미지(EIngredient → 텍스처, 2026-11-22 추가: docs/02_design/art-style.md 3.6)는 BP_ShopGameInstance의 BP 변수다(ADR-0014). C++은 쓰지 않으므로 선언하지 않는다.
 
 ### 3.6 FBusinessSim — BusinessSim.h
 ```cpp
@@ -826,7 +826,7 @@ private:
 이벤트 처리 (`Advance`)
 | 이벤트 | 처리 | 바뀐 부분 |
 |---|---|---|
-| CustomerArrive | ① 다음 도착 예약: Now + FRandRange(ArrivalMin, ArrivalMax), DayEndTime 이전일 때만 ② 주문: FRand() < AnyOrderRate면 "아무거나", 아니면 해금 베이스 중 가중치 1개 + 과일(없음 = NoFruitWeight) 중 가중치 1개 ③ 재고 먼저(D13): 원하는 조합이 진열대에 있으면("아무거나"는 재고가 하나라도 있으면, 진열 개수 비례로 1개 — D12) 바로 판매(`Sell(…, INDEX_NONE)`), 대기열에 들어가지 않는다 ④ 재고가 없고 대기열이 MaxQueue 이상이면 오지 않는다(놓친 손님에 넣지 않음, D14) ⑤ 대기열 끝에 넣기: Id, LookIndex = RandRange(0, LookCount − 1), ExpireTime = Now + Patience, CustomerExpire 이벤트 | Customers (재고 구매면 Shelf · Gold) |
+| CustomerArrive | ① 다음 도착 예약: Event.Time + FRandRange(ArrivalMin, ArrivalMax) ② 주문: FRand() < AnyOrderRate면 "아무거나", 아니면 해금 베이스 중 가중치 1개 + 과일(없음 = NoFruitWeight) 중 가중치 1개 ③ 재고 먼저(D13): 원하는 조합이 진열대에 있으면("아무거나"는 재고가 하나라도 있으면, 진열 개수 비례로 1개 — D12) 바로 판매(`Sell(…, INDEX_NONE)`), 대기열에 들어가지 않는다 ④ 재고가 없고 대기열이 MaxQueue 이상이면 오지 않는다(놓친 손님에 넣지 않음, D14) ⑤ 대기열 끝에 넣기: Id, LookIndex = RandRange(0, LookCount − 1), ExpireTime = Now + Patience, CustomerExpire 이벤트 | Customers (재고 구매면 Shelf · Gold) |
 | CustomerExpire | 그 ID가 아직 대기열에 있으면 빼고 MissedCustomers +1. 없으면 버림(D2) | Customers |
 | SteamerRefilled | 게이지 = MaxGauge, SteamerRefillEndTime = 0 | Steamer |
 | WorkbenchDone | Wrapping이면 배분(1.10: 손님 → 진열대 → 폐기). Trash면 비우기. 작업대 Empty | Workbench (+ Customers · Shelf · Gold) |
@@ -970,8 +970,8 @@ private:
 | 로비 | GI `GetProgress`(Day · Gold, Gold < 0 → "파산위기!"), `GetNextUnlock`(false → 모든 재료 해금 표시, OutRow.RentIncrease > 0이면 "임대료 +N" 표시), `GetNextSteamerLevel` | GI `OnProgressChanged` | GI `TryUnlockNext` · `TryUpgradeSteamer`, 엔진 `Open Level`(L_Business) |
 | 영업 상단 | GM `GetDayEndTime` − `Get Game Time in Seconds`, `GetDayResult`.Sales, `GetCurrentGold` | GM `OnGoldChanged` | 일시정지 버튼: 엔진 `Set Game Paused`(true) + 오버레이 |
 | 손님 줄 (슬롯 5) | GM `GetWaitingCustomers`, `GetPatience`, BP_BusinessGameMode `CustomerLookImages`, BP_ShopGameInstance 재료 이미지 | GM `OnCustomersChanged` | — |
-| 진열대 (3 × 5) | GM `GetShelf`, 재료 이미지 | GM `OnShelfChanged` | — |
-| 재료통 | GI `GetUnlockedIngredients`(베이스 · 과일), 재료 이미지 | — | GM `TapIngredient` |
+| 진열대 (2 × 8) | GM `GetShelf`, GI `GetBalance`(MaxStockPerRecipe — 점 수), 재료 이미지 | GM `OnShelfChanged` | — |
+| 재료통 | GI `GetUnlockedIngredients`(베이스 · 과일), 재료통 이미지 | — | GM `TapIngredient` |
 | 작업대 · 찜기 | GM `GetWorkbenchRecipe` · `GetSteamerGauge` · `GetSteamerMaxGauge` · `GetSteamerRefillEndTime`, GI `GetBalance`(연출 시간) | GM `OnWorkbenchChanged` · `OnSteamerChanged` | GM `TapSteamer` · `TapDiscard` |
 | 결산 · 게임 오버 팝업 | (델리게이트 인자) 매출 · 재료비 · 임대료(Rent) · 순이익 = Sales − IngredientCost − Rent | GM `OnDayEnded` | `Open Level`(L_Lobby) |
 | 일시정지 오버레이 | — | GM `OnResumeRequired` | `Set Game Paused`(false) |
@@ -1304,8 +1304,8 @@ GDD의 규칙 한 줄마다 담당 클래스 · 함수와 검증 방법을 잇�
 | R32 | 일차가 오를수록 빨라짐, 마지막 행 반복 (하루 진행) | `FillDayInput`(min(Day, 행 수)), Days.csv | 5단계 수치 + 수동(Day > 행 수) |
 | R33 | 하루 약 3분, 남은 시간 표시 (개요 · 화면) | DayEnd 이벤트, `GetDayEndTime` | 자동 `AIGame.BusinessSim.DayEnd.AtDuration` |
 | R34 | 로비: 일차 · 골드 · 다음 해금 · 찜기 업그레이드 · 영업 시작 (화면) | 3.8 UI 계약 로비 | 수동 |
-| R35 | 영업 화면 구성(상단 · 손님 · 메모 · 진열대 · 재료통 · 작업대 · 찜기) (화면) | 3.8 UI 계약 | 수동 · 실기기(SafeZone) |
-| R36 | 진열대 3 × 5, 처음 진열된 순서, 칸 빼고 당기기, 행 위치 k/(n+1) (화면 · D9) | `Shelf` 배열 순서, 위젯 배치 | 자동 `AIGame.BusinessSim.Shelf.OrderAndRemove` + 수동 배치 |
+| R35 | 영업 화면 구성(상단 · 손님 · 진열대 · 메모 · 재료통 · 작업대(찜기 포함)) (화면, 좌표: art-style.md 1장) | 3.8 UI 계약 | 수동 · 실기기(SafeZone) |
+| R36 | 진열대 2 × 8 · 개수 점 · 행마다 가운데 정렬, 처음 진열된 순서, 칸 빼고 당기기, 행 위치 k/(n+1) (화면 · D9) | `Shelf` 배열 순서, 위젯 배치 | 자동 `AIGame.BusinessSim.Shelf.OrderAndRemove` + 수동 배치 |
 | R37 | 결산 팝업: 매출 · 재료비 · 임대료 · 순이익 · 판매 · 놓친 손님(인내심 이탈만) · 쓰레기 · 폐기 · 파산 경고 (화면 · D14 · D16) | `FDayResult`, `OnDayEnded` | 자동 `AIGame.BusinessSim.DayEnd.ResultCounts` + 수동 |
 | R38 | 게임 오버 팝업: "파산", 처음부터 (화면) | `OnDayEnded`(GameOver), `Open Level` | 수동 |
 | R39 | 일시정지 오버레이, 앱 복귀 때 "계속하기" (화면 · 모바일) | 엔진 `SetGamePaused`, `OnResumeRequired`(영업 중일 때만 — F2) | 수동 · 실기기 |

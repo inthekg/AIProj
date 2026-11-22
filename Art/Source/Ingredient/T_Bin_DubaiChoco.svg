@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="320" height="176" viewBox="0 0 320 176">
+  <!-- 재료통 베이스 칸: 두바이초코 — 초코 위 피스타치오 조각 (art-style.md 3.6) -->
+  <defs>
+    <clipPath id="opening">
+      <rect x="18" y="16" width="284" height="120" rx="14"/>
+    </clipPath>
+  </defs>
+  <rect class="wood line-m" x="3" y="3" width="314" height="170" rx="22"/>
+  <rect class="wood" x="18" y="16" width="284" height="120" rx="14"/>
+  <g clip-path="url(#opening)">
+    <path class="choco line-m" d="M 10 44 Q 160 4 310 44 L 310 150 L 10 150 Z"/>
+    <ellipse class="green line-s" cx="70" cy="70" rx="14" ry="7" transform="rotate(-20 70 70)"/>
+    <ellipse class="green line-s" cx="120" cy="52" rx="14" ry="7" transform="rotate(15 120 52)"/>
+    <ellipse class="green line-s" cx="176" cy="60" rx="14" ry="7" transform="rotate(-10 176 60)"/>
+    <ellipse class="green line-s" cx="234" cy="66" rx="14" ry="7" transform="rotate(25 234 66)"/>
+    <ellipse class="green line-s" cx="98" cy="100" rx="14" ry="7" transform="rotate(30 98 100)"/>
+    <ellipse class="green line-s" cx="160" cy="96" rx="14" ry="7" transform="rotate(-25 160 96)"/>
+    <ellipse class="green line-s" cx="222" cy="104" rx="14" ry="7" transform="rotate(10 222 104)"/>
+    <ellipse class="green line-s" cx="60" cy="124" rx="14" ry="7" transform="rotate(0 60 124)"/>
+    <ellipse class="green line-s" cx="134" cy="126" rx="14" ry="7" transform="rotate(20 134 126)"/>
+    <ellipse class="green line-s" cx="270" cy="120" rx="14" ry="7" transform="rotate(-15 270 120)"/>
+  </g>
+  <rect class="line-m" fill="none" x="18" y="16" width="284" height="120" rx="14"/>
+  <path class="line-s" fill="none" d="M 14 152 L 306 152"/>
+</svg>

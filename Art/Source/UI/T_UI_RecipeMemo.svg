@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="480" height="44" viewBox="0 0 480 44">
+  <!-- 제작 메모 바탕: 점선 테두리 + 맨 앞 체크 표시(그림). 글자 "베이스 → 과일(선택) → 떡"은 UMG로 x 48부터 (art-style.md 2장, art-pipeline.md D10, art_log.md D41) -->
+  <rect class="white line-s" x="2" y="2" width="476" height="40" rx="14" stroke-dasharray="10 7"/>
+  <path class="line-s" fill="none" d="M 16 22 L 23 30 L 36 13"/>
+</svg>

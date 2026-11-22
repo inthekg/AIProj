@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="232" height="176" viewBox="0 0 232 176">
+  <!-- 재료통 과일 칸: 블루베리 (art-style.md 3.6) -->
+  <defs>
+    <clipPath id="opening">
+      <rect x="18" y="16" width="196" height="120" rx="14"/>
+    </clipPath>
+  </defs>
+  <rect class="wood line-m" x="3" y="3" width="226" height="170" rx="22"/>
+  <rect class="wood" x="18" y="16" width="196" height="120" rx="14"/>
+  <g clip-path="url(#opening)">
+    <circle class="blue line-s" cx="-7" cy="41" r="16"/>
+    <circle class="blue line-s" cx="28" cy="38" r="17"/>
+    <circle class="blue line-s" cx="63" cy="42" r="18"/>
+    <circle class="blue line-s" cx="98" cy="39" r="15"/>
+    <circle class="blue line-s" cx="133" cy="43" r="16"/>
+    <circle class="blue line-s" cx="168" cy="40" r="17"/>
+    <circle class="blue line-s" cx="203" cy="37" r="18"/>
+    <circle class="blue line-s" cx="17" cy="67" r="15"/>
+    <circle class="blue line-s" cx="43" cy="64" r="16"/>
+    <circle class="blue line-s" cx="78" cy="68" r="17"/>
+    <circle class="blue line-s" cx="113" cy="65" r="18"/>
+    <circle class="blue line-s" cx="148" cy="69" r="15"/>
+    <circle class="blue line-s" cx="183" cy="66" r="16"/>
+    <circle class="blue line-s" cx="218" cy="63" r="17"/>
+    <circle class="blue line-s" cx="-2" cy="93" r="18"/>
+    <circle class="blue line-s" cx="33" cy="90" r="15"/>
+    <circle class="blue line-s" cx="68" cy="94" r="16"/>
+    <circle class="blue line-s" cx="94" cy="91" r="17"/>
+    <circle class="blue line-s" cx="129" cy="95" r="18"/>
+    <circle class="blue line-s" cx="164" cy="92" r="15"/>
+    <circle class="blue line-s" cx="199" cy="89" r="16"/>
+    <circle class="blue line-s" cx="13" cy="119" r="17"/>
+    <circle class="blue line-s" cx="48" cy="116" r="18"/>
+    <circle class="blue line-s" cx="83" cy="120" r="15"/>
+    <circle class="blue line-s" cx="118" cy="117" r="16"/>
+    <circle class="blue line-s" cx="153" cy="121" r="17"/>
+    <circle class="blue line-s" cx="179" cy="118" r="18"/>
+    <circle class="blue line-s" cx="214" cy="115" r="15"/>
+    <circle class="blue line-s" cx="-6" cy="145" r="16"/>
+    <circle class="blue line-s" cx="29" cy="142" r="17"/>
+    <circle class="blue line-s" cx="64" cy="146" r="18"/>
+    <circle class="blue line-s" cx="99" cy="143" r="15"/>
+    <circle class="blue line-s" cx="134" cy="147" r="16"/>
+    <circle class="blue line-s" cx="169" cy="144" r="17"/>
+    <circle class="blue line-s" cx="204" cy="141" r="18"/>
+  </g>
+  <rect class="line-m" fill="none" x="18" y="16" width="196" height="120" rx="14"/>
+  <path class="line-s" fill="none" d="M 14 152 L 218 152"/>
+</svg>

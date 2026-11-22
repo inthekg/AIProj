@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="320" height="320" viewBox="0 0 320 320">
+  <!-- 작업대 조합: 요거트이(가) 파인애플를 감싼 모양, 떡으로 싸기 전 (art-style.md 3.6, art-pipeline.md A05) -->
+  <defs>
+    <clipPath id="pineBody">
+      <path d="M 112 136 C 112 106, 133.6 85.6, 160 85.6 C 186.4 85.6, 208 106, 208 136 C 208 167.2, 186.4 186.4, 160 186.4 C 133.6 186.4, 112 167.2, 112 136 Z"/>
+    </clipPath>
+  </defs>
+  <ellipse class="shade" cx="160" cy="276" rx="118" ry="16"/>
+  <path class="green line" d="M 154 95.2 C 134.8 90.4, 119.2 79.6, 110.8 64 C 128.8 67.6, 145.6 77.2, 158.8 90.4 Z"/>
+  <path class="green line" d="M 166 95.2 C 185.2 90.4, 200.8 79.6, 209.2 64 C 191.2 67.6, 174.4 77.2, 161.2 90.4 Z"/>
+  <path class="green line" d="M 157.6 92.8 C 140.8 78.4, 131.2 60.4, 128.8 41.2 C 143.2 52, 154 68.8, 161.2 88 Z"/>
+  <path class="green line" d="M 162.4 92.8 C 179.2 78.4, 188.8 60.4, 191.2 41.2 C 176.8 52, 166 68.8, 158.8 88 Z"/>
+  <path class="green line" d="M 160 91.6 C 151.6 70, 152.8 46, 160 26.8 C 167.2 46, 168.4 70, 160 91.6 Z"/>
+  <path class="yellow" d="M 112 136 C 112 106, 133.6 85.6, 160 85.6 C 186.4 85.6, 208 106, 208 136 C 208 167.2, 186.4 186.4, 160 186.4 C 133.6 186.4, 112 167.2, 112 136 Z"/>
+  <path class="line-s" fill="none" clip-path="url(#pineBody)" d="M 100 124 L 166 190"/>
+  <path class="line-s" fill="none" clip-path="url(#pineBody)" d="M 124 100 L 214 190"/>
+  <path class="line-s" fill="none" clip-path="url(#pineBody)" d="M 154 88 L 220 154"/>
+  <path class="line-s" fill="none" clip-path="url(#pineBody)" d="M 220 124 L 154 190"/>
+  <path class="line-s" fill="none" clip-path="url(#pineBody)" d="M 196 100 L 106 190"/>
+  <path class="line-s" fill="none" clip-path="url(#pineBody)" d="M 166 88 L 100 154"/>
+  <path class="line" fill="none" d="M 112 136 C 112 106, 133.6 85.6, 160 85.6 C 186.4 85.6, 208 106, 208 136 C 208 167.2, 186.4 186.4, 160 186.4 C 133.6 186.4, 112 167.2, 112 136 Z"/>
+  <path class="white line" d="M 40 230 C 40 176, 70 150, 100 146 C 128 162, 192 162, 220 146 C 250 150, 280 176, 280 230 C 280 262, 248 276, 160 276 C 72 276, 40 262, 40 230 Z"/>
+</svg>

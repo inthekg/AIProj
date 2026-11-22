@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="320" height="320" viewBox="0 0 320 320">
+  <!-- 단독 과일: 블루베리 3알 + 잎, 바닥 그림자 없음 (art-style.md 3.6) -->
+  <ellipse class="green line" cx="222" cy="66" rx="38" ry="17" transform="rotate(-30 222 66)"/>
+  <circle class="blue line" cx="160" cy="116" r="70"/>
+  <path class="line-s" fill="none" d="M 160 88 L 160 76"/>
+  <path class="line-s" fill="none" d="M 160 88 L 171.4 84.3"/>
+  <path class="line-s" fill="none" d="M 160 88 L 167.1 97.7"/>
+  <path class="line-s" fill="none" d="M 160 88 L 152.9 97.7"/>
+  <path class="line-s" fill="none" d="M 160 88 L 148.6 84.3"/>
+  <circle class="blue line" cx="110" cy="198" r="72"/>
+  <path class="line-s" fill="none" d="M 100 178 L 100 166"/>
+  <path class="line-s" fill="none" d="M 100 178 L 111.4 174.3"/>
+  <path class="line-s" fill="none" d="M 100 178 L 107.1 187.7"/>
+  <path class="line-s" fill="none" d="M 100 178 L 92.9 187.7"/>
+  <path class="line-s" fill="none" d="M 100 178 L 88.6 174.3"/>
+  <circle class="blue line" cx="212" cy="198" r="72"/>
+  <path class="line-s" fill="none" d="M 222 178 L 222 166"/>
+  <path class="line-s" fill="none" d="M 222 178 L 233.4 174.3"/>
+  <path class="line-s" fill="none" d="M 222 178 L 229.1 187.7"/>
+  <path class="line-s" fill="none" d="M 222 178 L 214.9 187.7"/>
+  <path class="line-s" fill="none" d="M 222 178 L 210.6 174.3"/>
+</svg>

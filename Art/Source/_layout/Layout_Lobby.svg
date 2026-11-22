@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1920" viewBox="0 0 1080 1920" font-family="Malgun Gothic">
+  <style>
+    .page { fill: #F7F4EE; }
+    .bg { fill: #E6DCCB; stroke: #A89C8A; stroke-width: 2; stroke-dasharray: 10 6; }
+    .box { fill: #D2D2D2; stroke: #6E6E6E; stroke-width: 3; }
+    .sub { fill: #ECECEC; stroke: #8E8E8E; stroke-width: 2; }
+    .panel { fill: #E2E2E2; stroke: #6E6E6E; stroke-width: 3; }
+    .tap { fill: #BFD8F2; stroke: #3F78B0; stroke-width: 3; }
+    .thumb { fill: #3F78B0; fill-opacity: 0.07; }
+    .t { font-size: 26px; fill: #2E2E2E; text-anchor: middle; }
+    .s { font-size: 19px; fill: #4A4A4A; text-anchor: middle; }
+    .l { font-size: 19px; fill: #4A4A4A; }
+    .z { font-size: 18px; fill: #8A8A8A; text-anchor: end; }
+  </style>
+
+  <rect class="page" width="1080" height="1920"/>
+  <rect class="thumb" y="1100" width="1080" height="820"/>
+
+  <!-- 상단 0–144: 일차 · "파산위기!"(골드 옆) · 골드 (GDD 화면 구성 1) -->
+  <rect class="sub" x="24" y="32" width="220" height="80"/>
+  <text class="t" x="134" y="81">일차</text>
+  <rect class="box" x="440" y="20" width="300" height="104" rx="12"/>
+  <text class="t" x="590" y="66">파산위기! 표지판</text>
+  <text class="s" x="590" y="96">300×104 · 빚일 때만</text>
+  <rect class="box" x="760" y="40" width="64" height="64"/>
+  <text class="s" x="792" y="79">코인</text>
+  <rect class="sub" x="836" y="36" width="220" height="72"/>
+  <text class="t" x="946" y="81">골드</text>
+
+  <!-- 가게 그림: 배경(T_BG_Lobby)이 보이는 자리 -->
+  <rect class="bg" x="40" y="160" width="1000" height="560" rx="12"/>
+  <text class="t" x="540" y="430">가게 그림 = 배경 (A09) · 비워 둠</text>
+
+  <!-- 카드 1: 다음 해금 -->
+  <rect class="panel" x="40" y="740" width="1000" height="380" rx="24"/>
+  <text class="l" x="64" y="776">다음 해금 카드 · 패널 1000×380 (9-slice)</text>
+  <rect class="box" x="72" y="802" width="256" height="256"/>
+  <text class="t" x="200" y="924">재료 256</text>
+  <text class="s" x="200" y="954">(원본 크기)</text>
+  <rect class="sub" x="360" y="796" width="400" height="64"/>
+  <text class="t" x="560" y="837">재료 이름</text>
+  <rect class="sub" x="360" y="876" width="320" height="52"/>
+  <text class="s" x="520" y="909">비용 (코인 + 숫자)</text>
+  <rect class="sub" x="360" y="940" width="320" height="52"/>
+  <text class="s" x="520" y="973">임대료 +N</text>
+  <rect class="tap" x="720" y="952" width="280" height="144" rx="24"/>
+  <text class="t" x="860" y="1020">해금</text>
+  <text class="s" x="860" y="1050">버튼 280×144</text>
+
+  <!-- 카드 2: 찜기 업그레이드 -->
+  <rect class="panel" x="40" y="1144" width="1000" height="380" rx="24"/>
+  <text class="l" x="64" y="1180">찜기 업그레이드 카드 · 패널 1000×380</text>
+  <rect class="box" x="72" y="1228" width="256" height="216"/>
+  <text class="t" x="200" y="1330">찜기 256×216</text>
+  <text class="s" x="200" y="1360">(264×224를 0.97배 표시)</text>
+  <rect class="sub" x="360" y="1200" width="400" height="64"/>
+  <text class="t" x="560" y="1241">Lv → Lv+1</text>
+  <rect class="sub" x="360" y="1280" width="320" height="52"/>
+  <text class="s" x="520" y="1313">최대 개수 · 찌는 시간</text>
+  <rect class="sub" x="360" y="1344" width="320" height="52"/>
+  <text class="s" x="520" y="1377">비용 (코인 + 숫자)</text>
+  <rect class="tap" x="720" y="1356" width="280" height="144" rx="24"/>
+  <text class="t" x="860" y="1424">업그레이드</text>
+  <text class="s" x="860" y="1454">버튼 280×144</text>
+
+  <!-- 영업 시작 -->
+  <rect class="tap" x="180" y="1640" width="720" height="176" rx="32"/>
+  <text class="t" x="540" y="1724">영업 시작</text>
+  <text class="s" x="540" y="1756">버튼 720×176</text>
+
+  <text class="z" x="1072" y="1139">▼ 조작 영역 (아래 43%) · 파란색 = 터치</text>
+</svg>

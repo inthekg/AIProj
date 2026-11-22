@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="360" viewBox="0 0 1080 360">
+  <!-- 진열대 판. 행 위치가 칸 수에 따라 바뀌므로(ADR-0012) 고정된 선반 칸을 그리지 않는다. 좌우 외곽선은 화면 밖으로 보낸다 (art-style.md 3.9) -->
+  <rect class="wood line" x="-12" y="4" width="1104" height="352"/>
+  <rect class="wood line" x="-12" y="4" width="1104" height="30"/>
+  <path class="line-s" fill="none" d="M -12 330 L 1092 330"/>
+</svg>

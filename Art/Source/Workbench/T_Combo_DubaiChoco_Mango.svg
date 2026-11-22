@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="320" height="320" viewBox="0 0 320 320">
+  <!-- 작업대 조합: 두바이초코이(가) 망고를 감싼 모양, 떡으로 싸기 전 (art-style.md 3.6, art-pipeline.md A05) -->
+  <ellipse class="shade" cx="160" cy="276" rx="118" ry="16"/>
+  <rect class="choco line" x="132.5" y="53.3" width="7.7" height="22" rx="3.9" transform="rotate(-20 136.4 64.3)"/>
+  <path class="orange line" d="M 122.6 157.8 C 100.6 135.8, 105 91.8, 138 75.3 C 168.8 59.9, 210.6 73.1, 219.4 108.3 C 227.1 140.2, 206.2 175.4, 171 182 C 149 186.4, 133.6 171, 122.6 157.8 Z"/>
+  <path class="green line" d="M 140.2 64.3 C 154.5 46.7, 182 44.5, 199.6 53.3 C 184.2 66.5, 160 72, 140.2 64.3 Z"/>
+  <path class="line-s" fill="none" d="M 144.6 62.7 C 161.1 57.7, 177.6 54.4, 195.2 53.9"/>
+  <path class="choco line" d="M 40 230 C 40 176, 70 150, 100 146 C 128 162, 192 162, 220 146 C 250 150, 280 176, 280 230 C 280 262, 248 276, 160 276 C 72 276, 40 262, 40 230 Z"/>
+  <ellipse class="green line-s" cx="84" cy="210" rx="14" ry="7" transform="rotate(-20 84 210)"/>
+  <ellipse class="green line-s" cx="136" cy="242" rx="14" ry="7" transform="rotate(15 136 242)"/>
+  <ellipse class="green line-s" cx="194" cy="234" rx="14" ry="7" transform="rotate(-10 194 234)"/>
+  <ellipse class="green line-s" cx="240" cy="206" rx="14" ry="7" transform="rotate(25 240 206)"/>
+  <ellipse class="green line-s" cx="70" cy="182" rx="14" ry="7" transform="rotate(30 70 182)"/>
+  <ellipse class="green line-s" cx="250" cy="180" rx="14" ry="7" transform="rotate(-25 250 180)"/>
+  <ellipse class="green line-s" cx="164" cy="262" rx="14" ry="7" transform="rotate(0 164 262)"/>
+</svg>

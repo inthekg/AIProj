@@ -1,0 +1,70 @@
+/* 변환할 때 모든 SVG의 <svg> 바로 뒤에 <style>로 들어간다 (Scripts/art/art.mjs) */
+/* 규칙 · 쓰는 곳: docs/02_design/art-style.md 3장. 에셋 SVG는 색을 hex로 직접 쓰지 않고 이 클래스만 쓴다 */
+/* CSS 변수(var())는 sharp의 SVG 렌더러에서 동작하지 않아 클래스로 나눈다 (art_log.md A01) */
+
+/* 외곽선: 굵기는 캔버스 크기 등급별 */
+.line {
+  stroke: #6E4E3E;
+  stroke-width: 8;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+.line-m {
+  stroke: #6E4E3E;
+  stroke-width: 6;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+.line-s {
+  stroke: #6E4E3E;
+  stroke-width: 4;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+/* 바닥 그림자 전용 (물체 안쪽 명암 · 하이라이트 · 볼터치는 쓰지 않는다, art_log.md D24) */
+.shade {
+  fill: #6E4E3E;
+  fill-opacity: 0.14;
+}
+
+/* 팔레트 13색 (파스텔, art_log.md D27 · D36) */
+.ink {
+  fill: #6E4E3E;
+}
+.cream {
+  fill: #FFF3E3;
+}
+.white {
+  fill: #FFFBF5;
+}
+.skin {
+  fill: #FFE4D2;
+}
+.red {
+  fill: #F38E94;
+}
+.orange {
+  fill: #FFC896;
+}
+.yellow {
+  fill: #FFE594;
+}
+.green {
+  fill: #B5DFA6;
+}
+.blue {
+  fill: #A3B1EC;
+}
+.bean {
+  fill: #B07A84;
+}
+.choco {
+  fill: #B08A73;
+}
+.wood {
+  fill: #EDCBA8;
+}
+.gray {
+  fill: #D6D0CC;
+}

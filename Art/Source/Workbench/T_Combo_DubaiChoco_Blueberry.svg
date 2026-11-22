@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="320" height="320" viewBox="0 0 320 320">
+  <!-- 작업대 조합: 두바이초코이(가) 블루베리를 감싼 모양, 떡으로 싸기 전 (art-style.md 3.6, art-pipeline.md A05) -->
+  <ellipse class="shade" cx="160" cy="276" rx="118" ry="16"/>
+  <ellipse class="green line" cx="197.2" cy="59.6" rx="22.8" ry="10.2" transform="rotate(-30 197.2 59.6)"/>
+  <circle class="blue line" cx="160" cy="89.6" r="42"/>
+  <path class="line-s" fill="none" d="M 160 72.8 L 160 65.6"/>
+  <path class="line-s" fill="none" d="M 160 72.8 L 166.8 70.6"/>
+  <path class="line-s" fill="none" d="M 160 72.8 L 164.3 78.6"/>
+  <path class="line-s" fill="none" d="M 160 72.8 L 155.7 78.6"/>
+  <path class="line-s" fill="none" d="M 160 72.8 L 153.2 70.6"/>
+  <circle class="blue line" cx="130" cy="138.8" r="43.2"/>
+  <path class="line-s" fill="none" d="M 124 126.8 L 124 119.6"/>
+  <path class="line-s" fill="none" d="M 124 126.8 L 130.8 124.6"/>
+  <path class="line-s" fill="none" d="M 124 126.8 L 128.3 132.6"/>
+  <path class="line-s" fill="none" d="M 124 126.8 L 119.7 132.6"/>
+  <path class="line-s" fill="none" d="M 124 126.8 L 117.2 124.6"/>
+  <circle class="blue line" cx="191.2" cy="138.8" r="43.2"/>
+  <path class="line-s" fill="none" d="M 197.2 126.8 L 197.2 119.6"/>
+  <path class="line-s" fill="none" d="M 197.2 126.8 L 204 124.6"/>
+  <path class="line-s" fill="none" d="M 197.2 126.8 L 201.5 132.6"/>
+  <path class="line-s" fill="none" d="M 197.2 126.8 L 192.9 132.6"/>
+  <path class="line-s" fill="none" d="M 197.2 126.8 L 190.4 124.6"/>
+  <path class="choco line" d="M 40 230 C 40 176, 70 150, 100 146 C 128 162, 192 162, 220 146 C 250 150, 280 176, 280 230 C 280 262, 248 276, 160 276 C 72 276, 40 262, 40 230 Z"/>
+  <ellipse class="green line-s" cx="84" cy="210" rx="14" ry="7" transform="rotate(-20 84 210)"/>
+  <ellipse class="green line-s" cx="136" cy="242" rx="14" ry="7" transform="rotate(15 136 242)"/>
+  <ellipse class="green line-s" cx="194" cy="234" rx="14" ry="7" transform="rotate(-10 194 234)"/>
+  <ellipse class="green line-s" cx="240" cy="206" rx="14" ry="7" transform="rotate(25 240 206)"/>
+  <ellipse class="green line-s" cx="70" cy="182" rx="14" ry="7" transform="rotate(30 70 182)"/>
+  <ellipse class="green line-s" cx="250" cy="180" rx="14" ry="7" transform="rotate(-25 250 180)"/>
+  <ellipse class="green line-s" cx="164" cy="262" rx="14" ry="7" transform="rotate(0 164 262)"/>
+</svg>

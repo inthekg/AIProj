@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="232" height="176" viewBox="0 0 232 176">
+  <!-- 재료통 과일 칸: 망고 (art-style.md 3.6) -->
+  <defs>
+    <clipPath id="opening">
+      <rect x="18" y="16" width="196" height="120" rx="14"/>
+    </clipPath>
+  </defs>
+  <rect class="wood line-m" x="3" y="3" width="226" height="170" rx="22"/>
+  <rect class="wood" x="18" y="16" width="196" height="120" rx="14"/>
+  <g clip-path="url(#opening)">
+    <rect class="choco line-s" x="5" y="15.8" width="4.2" height="12" rx="2.1" transform="rotate(-20 7.1 21.8)"/>
+  <path class="orange line-s" d="M -0.4 72.8 C -12.4 60.8, -10 36.8, 8 27.8 C 24.8 19.4, 47.6 26.6, 52.4 45.8 C 56.6 63.2, 45.2 82.4, 26 86 C 14 88.4, 5.6 80, -0.4 72.8 Z"/>
+  <path class="green line-s" d="M 9.2 21.8 C 17 12.2, 32 11, 41.6 15.8 C 33.2 23, 20 26, 9.2 21.8 Z"/>
+    <rect class="choco line-s" x="67" y="15.8" width="4.2" height="12" rx="2.1" transform="rotate(-20 69.1 21.8)"/>
+  <path class="orange line-s" d="M 61.6 72.8 C 49.6 60.8, 52 36.8, 70 27.8 C 86.8 19.4, 109.6 26.6, 114.4 45.8 C 118.6 63.2, 107.2 82.4, 88 86 C 76 88.4, 67.6 80, 61.6 72.8 Z"/>
+  <path class="green line-s" d="M 71.2 21.8 C 79 12.2, 94 11, 103.6 15.8 C 95.2 23, 82 26, 71.2 21.8 Z"/>
+    <rect class="choco line-s" x="129" y="15.8" width="4.2" height="12" rx="2.1" transform="rotate(-20 131.1 21.8)"/>
+  <path class="orange line-s" d="M 123.6 72.8 C 111.6 60.8, 114 36.8, 132 27.8 C 148.8 19.4, 171.6 26.6, 176.4 45.8 C 180.6 63.2, 169.2 82.4, 150 86 C 138 88.4, 129.6 80, 123.6 72.8 Z"/>
+  <path class="green line-s" d="M 133.2 21.8 C 141 12.2, 156 11, 165.6 15.8 C 157.2 23, 144 26, 133.2 21.8 Z"/>
+    <rect class="choco line-s" x="191" y="15.8" width="4.2" height="12" rx="2.1" transform="rotate(-20 193.1 21.8)"/>
+  <path class="orange line-s" d="M 185.6 72.8 C 173.6 60.8, 176 36.8, 194 27.8 C 210.8 19.4, 233.6 26.6, 238.4 45.8 C 242.6 63.2, 231.2 82.4, 212 86 C 200 88.4, 191.6 80, 185.6 72.8 Z"/>
+  <path class="green line-s" d="M 195.2 21.8 C 203 12.2, 218 11, 227.6 15.8 C 219.2 23, 206 26, 195.2 21.8 Z"/>
+    <rect class="choco line-s" x="-25" y="53.8" width="4.2" height="12" rx="2.1" transform="rotate(-20 -22.9 59.8)"/>
+  <path class="orange line-s" d="M -30.4 110.8 C -42.4 98.8, -40 74.8, -22 65.8 C -5.2 57.4, 17.6 64.6, 22.4 83.8 C 26.6 101.2, 15.2 120.4, -4 124 C -16 126.4, -24.4 118, -30.4 110.8 Z"/>
+  <path class="green line-s" d="M -20.8 59.8 C -13 50.2, 2 49, 11.6 53.8 C 3.2 61, -10 64, -20.8 59.8 Z"/>
+    <rect class="choco line-s" x="37" y="53.8" width="4.2" height="12" rx="2.1" transform="rotate(-20 39.1 59.8)"/>
+  <path class="orange line-s" d="M 31.6 110.8 C 19.6 98.8, 22 74.8, 40 65.8 C 56.8 57.4, 79.6 64.6, 84.4 83.8 C 88.6 101.2, 77.2 120.4, 58 124 C 46 126.4, 37.6 118, 31.6 110.8 Z"/>
+  <path class="green line-s" d="M 41.2 59.8 C 49 50.2, 64 49, 73.6 53.8 C 65.2 61, 52 64, 41.2 59.8 Z"/>
+    <rect class="choco line-s" x="99" y="53.8" width="4.2" height="12" rx="2.1" transform="rotate(-20 101.1 59.8)"/>
+  <path class="orange line-s" d="M 93.6 110.8 C 81.6 98.8, 84 74.8, 102 65.8 C 118.8 57.4, 141.6 64.6, 146.4 83.8 C 150.6 101.2, 139.2 120.4, 120 124 C 108 126.4, 99.6 118, 93.6 110.8 Z"/>
+  <path class="green line-s" d="M 103.2 59.8 C 111 50.2, 126 49, 135.6 53.8 C 127.2 61, 114 64, 103.2 59.8 Z"/>
+    <rect class="choco line-s" x="161" y="53.8" width="4.2" height="12" rx="2.1" transform="rotate(-20 163.1 59.8)"/>
+  <path class="orange line-s" d="M 155.6 110.8 C 143.6 98.8, 146 74.8, 164 65.8 C 180.8 57.4, 203.6 64.6, 208.4 83.8 C 212.6 101.2, 201.2 120.4, 182 124 C 170 126.4, 161.6 118, 155.6 110.8 Z"/>
+  <path class="green line-s" d="M 165.2 59.8 C 173 50.2, 188 49, 197.6 53.8 C 189.2 61, 176 64, 165.2 59.8 Z"/>
+    <rect class="choco line-s" x="223" y="53.8" width="4.2" height="12" rx="2.1" transform="rotate(-20 225.1 59.8)"/>
+  <path class="orange line-s" d="M 217.6 110.8 C 205.6 98.8, 208 74.8, 226 65.8 C 242.8 57.4, 265.6 64.6, 270.4 83.8 C 274.6 101.2, 263.2 120.4, 244 124 C 232 126.4, 223.6 118, 217.6 110.8 Z"/>
+  <path class="green line-s" d="M 227.2 59.8 C 235 50.2, 250 49, 259.6 53.8 C 251.2 61, 238 64, 227.2 59.8 Z"/>
+    <rect class="choco line-s" x="5" y="91.8" width="4.2" height="12" rx="2.1" transform="rotate(-20 7.1 97.8)"/>
+  <path class="orange line-s" d="M -0.4 148.8 C -12.4 136.8, -10 112.8, 8 103.8 C 24.8 95.4, 47.6 102.6, 52.4 121.8 C 56.6 139.2, 45.2 158.4, 26 162 C 14 164.4, 5.6 156, -0.4 148.8 Z"/>
+  <path class="green line-s" d="M 9.2 97.8 C 17 88.2, 32 87, 41.6 91.8 C 33.2 99, 20 102, 9.2 97.8 Z"/>
+    <rect class="choco line-s" x="67" y="91.8" width="4.2" height="12" rx="2.1" transform="rotate(-20 69.1 97.8)"/>
+  <path class="orange line-s" d="M 61.6 148.8 C 49.6 136.8, 52 112.8, 70 103.8 C 86.8 95.4, 109.6 102.6, 114.4 121.8 C 118.6 139.2, 107.2 158.4, 88 162 C 76 164.4, 67.6 156, 61.6 148.8 Z"/>
+  <path class="green line-s" d="M 71.2 97.8 C 79 88.2, 94 87, 103.6 91.8 C 95.2 99, 82 102, 71.2 97.8 Z"/>
+    <rect class="choco line-s" x="129" y="91.8" width="4.2" height="12" rx="2.1" transform="rotate(-20 131.1 97.8)"/>
+  <path class="orange line-s" d="M 123.6 148.8 C 111.6 136.8, 114 112.8, 132 103.8 C 148.8 95.4, 171.6 102.6, 176.4 121.8 C 180.6 139.2, 169.2 158.4, 150 162 C 138 164.4, 129.6 156, 123.6 148.8 Z"/>
+  <path class="green line-s" d="M 133.2 97.8 C 141 88.2, 156 87, 165.6 91.8 C 157.2 99, 144 102, 133.2 97.8 Z"/>
+    <rect class="choco line-s" x="191" y="91.8" width="4.2" height="12" rx="2.1" transform="rotate(-20 193.1 97.8)"/>
+  <path class="orange line-s" d="M 185.6 148.8 C 173.6 136.8, 176 112.8, 194 103.8 C 210.8 95.4, 233.6 102.6, 238.4 121.8 C 242.6 139.2, 231.2 158.4, 212 162 C 200 164.4, 191.6 156, 185.6 148.8 Z"/>
+  <path class="green line-s" d="M 195.2 97.8 C 203 88.2, 218 87, 227.6 91.8 C 219.2 99, 206 102, 195.2 97.8 Z"/>
+  </g>
+  <rect class="line-m" fill="none" x="18" y="16" width="196" height="120" rx="14"/>
+  <path class="line-s" fill="none" d="M 14 152 L 218 152"/>
+</svg>

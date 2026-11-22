@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="320" height="320" viewBox="0 0 320 320">
+  <!-- 떡: 찜기에서 작업대로 와서 재료를 감싸는 납작한 떡 반죽 (art-style.md 3.6) -->
+  <ellipse class="shade" cx="160" cy="276" rx="118" ry="16"/>
+  <path class="white line" d="M 36 236 C 36 196, 92 172, 160 172 C 228 172, 284 196, 284 236 C 284 258, 250 270, 160 270 C 70 270, 36 258, 36 236 Z"/>
+  <path class="line-s" fill="none" d="M 96 204 Q 128 194 160 200"/>
+</svg>

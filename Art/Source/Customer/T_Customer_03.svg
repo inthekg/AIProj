@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="280" viewBox="0 0 200 280">
+  <!-- 손님 03: 일반 성인 여자 — 앞머리 있는 장발(앞 · 뒷머리 한 덩어리, 맨 뒤), 초록 옷. 템플릿: art-style.md 3.7 -->
+  <defs>
+    <clipPath id="belowBangs">
+      <path d="M 0 104 L 36 104 C 40 90, 44 82, 50 78 C 72 84, 88 76, 100 80 C 112 76, 128 84, 150 78 C 156 82, 160 90, 164 104 L 200 104 L 200 280 L 0 280 Z"/>
+    </clipPath>
+  </defs>
+  <path class="choco line-m" d="M 24 240 L 24 110 C 24 50, 58 24, 100 24 C 142 24, 176 50, 176 110 L 176 240 Z"/>
+  <path class="green line-m" d="M 36 280 L 36 200 C 36 164, 64 142, 100 142 C 136 142, 164 164, 164 200 L 164 280 Z"/>
+  <ellipse class="skin" clip-path="url(#belowBangs)" cx="100" cy="94" rx="64" ry="60"/>
+  <ellipse class="line-m" fill="none" clip-path="url(#belowBangs)" cx="100" cy="94" rx="64" ry="60"/>
+  <path class="line-m" fill="none" d="M 36 104 C 40 90, 44 82, 50 78 C 72 84, 88 76, 100 80 C 112 76, 128 84, 150 78 C 156 82, 160 90, 164 104"/>
+  <ellipse class="ink" cx="80" cy="106" rx="5" ry="7"/>
+  <ellipse class="ink" cx="120" cy="106" rx="5" ry="7"/>
+  <path class="line-s" fill="none" d="M 94 124 Q 100 129 106 124"/>
+</svg>
