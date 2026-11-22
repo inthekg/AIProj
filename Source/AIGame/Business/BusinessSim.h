@@ -19,6 +19,7 @@ enum class EBusinessEventType : uint8
 {
 	CustomerArrive,
 	CustomerExpire,
+	SteamerRefilled,
 	WorkbenchDone,
 	DayEnd
 };
@@ -73,6 +74,9 @@ public:
 	/** 재료통 탭. 무시한 입력이면 None*/
 	EBusinessChange TapIngredient(EIngredient Ingredient, double Now);
 
+	/** 찜기 탭. 무시한 입력이면 None */
+	EBusinessChange TapSteamer(double Now);
+
 	/** 버리기 버튼. 무시한 입력이면 None */
 	EBusinessChange TapDiscard(double Now);
 
@@ -87,6 +91,9 @@ public:
 	const TArray<FCustomer>& GetWaitingCustomers() const { return WaitingCustomers; }
 	EWorkbenchState GetWorkbenchState() const { return WorkbenchState; }
 	const FRecipe& GetWorkbenchRecipe() const { return WorkbenchRecipe; }
+	int32 GetSteamerGauge() const { return SteamerGauge; }
+
+	double GetSteamerRefillEndTime() const { return SteamerRefillEndTime; }
 
 	double GetDayEndTime() const { return DayEndTime; }
 	const FDayResult& GetResult() const { return Result; }
@@ -112,8 +119,13 @@ private:
 	/** 작업대에 올린 재료. 쓰레기가 된 입력은 넣지 않고, 작업대가 Empty가 될 때 비운다 */
 	FRecipe WorkbenchRecipe;
 
-	/** 월드 시간(초). 재료 한정 입력 무시가 끝나는 시각*/
+	/** 월드 시간(초). 재료통 · 찜기 · 버리기 입력 무시가 끝나는 시각 */
 	double InputLockEndTime = 0.0;
+
+	int32 SteamerGauge = 0;
+
+	/** 월드 시간(초). 다시 찌는 중이 아니면 0 */
+	double SteamerRefillEndTime = 0.0;
 
 	FDayResult Result;
 

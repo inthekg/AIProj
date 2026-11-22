@@ -55,6 +55,8 @@ void UShopGameInstance::Init()
 	{
 		const FSteamerRow* Row = FindSteamerRow(Level);
 		checkf(Row, TEXT("Steamer: rows must be named 1..%d without gaps (missing %d)"), SteamerRowCount, Level);
+		checkf(Row->MaxGauge > 0, TEXT("Steamer %d: MaxGauge (%d) must be > 0"), Level, Row->MaxGauge);
+		checkf(Row->RegenTime > 0.f, TEXT("Steamer %d: RegenTime (%f) must be > 0"), Level, Row->RegenTime);
 		checkf(Level == 1 || Row->UpgradeCost > 0,
 			TEXT("Steamer %d: UpgradeCost (%d) must be > 0"), Level, Row->UpgradeCost);
 	}

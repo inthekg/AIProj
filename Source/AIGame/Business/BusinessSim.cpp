@@ -20,6 +20,8 @@ EBusinessChange FBusinessSim::StartDay(const FBusinessDayInput& InInput, double 
 	NextEventSeq = 0;
 	ClearWorkbench();
 	InputLockEndTime = 0.0;
+	SteamerGauge = Input.Steamer.MaxGauge;
+	SteamerRefillEndTime = 0.0;
 	Result = FDayResult();
 
 	Result.Rent = Input.Balance.BaseRent;
@@ -66,17 +68,65 @@ EBusinessChange FBusinessSim::TapIngredient(EIngredient Ingredient, double Now)
 		WorkbenchRecipe.Base = Ingredient;
 		InputLockEndTime = Now + Input.Balance.PlaceTime;
 		return EBusinessChange::Workbench | EBusinessChange::Gold;
+
 	case EWorkbenchState::BaseFruit:
 		WorkbenchState = NextState;
 		WorkbenchRecipe.Fruit = Ingredient;
 		InputLockEndTime = Now + Input.Balance.PlaceTime;
 		return EBusinessChange::Workbench | EBusinessChange::Gold;
+
 	case EWorkbenchState::Trash:
 		TrashWorkbench(Now);
 		return EBusinessChange::Workbench | EBusinessChange::Gold;
+
 	case EWorkbenchState::Empty:
 	case EWorkbenchState::Wrapping:
-		// 재료 입력으로는 갈 수 없는 상태다(전이표)
+		// 재료 입력으로는 갈 수 없는 상태
+		break;
+	}
+	checkNoEntry();
+	return EBusinessChange::None;
+}
+
+EBusinessChange FBusinessSim::TapSteamer(double Now)
+{
+	if (IsDayOver() || Now < InputLockEndTime || SteamerGauge == 0)
+	{
+		return EBusinessChange::None;
+	}
+
+	const EWorkbenchState NextState = NextWorkbenchState(WorkbenchState, EWorkbenchInput::Steamer);
+	if (NextState == WorkbenchState)
+	{
+		return EBusinessChange::None;
+	}
+
+	--SteamerGauge;
+	Result.IngredientCost += Input.Balance.RiceCakeCost;
+	// 순서 중요: 아래 switch의 case가 모두 바로 반환하므로 다시 찌기 예약을 먼저 한다
+	if (SteamerGauge == 0)
+	{
+		SteamerRefillEndTime = Now + Input.Steamer.RegenTime;
+		PushEvent(SteamerRefillEndTime, EBusinessEventType::SteamerRefilled);
+	}
+
+	switch (NextState)
+	{
+	case EWorkbenchState::Wrapping:
+		WorkbenchState = NextState;
+		InputLockEndTime = Now + Input.Balance.WrapTime;
+		//제작 완료
+		PushEvent(InputLockEndTime, EBusinessEventType::WorkbenchDone);
+		return EBusinessChange::Workbench | EBusinessChange::Steamer | EBusinessChange::Gold;
+
+	case EWorkbenchState::Trash:
+		TrashWorkbench(Now);
+		return EBusinessChange::Workbench | EBusinessChange::Steamer | EBusinessChange::Gold;
+
+	case EWorkbenchState::Empty:
+	case EWorkbenchState::Base:
+	case EWorkbenchState::BaseFruit:
+		// 찜기 입력으로는 갈 수 없는 상태
 		break;
 	}
 	checkNoEntry();
@@ -94,7 +144,6 @@ EBusinessChange FBusinessSim::TapDiscard(double Now)
 		return EBusinessChange::None;
 	}
 
-	// 재료비는 재료를 올릴 때 이미 냈다(GDD 버리기 버튼)
 	TrashWorkbench(Now);
 	return EBusinessChange::Workbench;
 }
@@ -244,6 +293,11 @@ EBusinessChange FBusinessSim::ProcessDueEvents(double Now)
 			Changes |= EBusinessChange::Customers;
 			continue;
 		}
+		case EBusinessEventType::SteamerRefilled:
+			SteamerGauge = Input.Steamer.MaxGauge;
+			SteamerRefillEndTime = 0.0;
+			Changes |= EBusinessChange::Steamer;
+			continue;
 		case EBusinessEventType::WorkbenchDone:
 			// TODO(T13): Wrapping이면 배분(손님 → 진열대 → 폐기, architecture.md 1.10 · 3.6)
 			ClearWorkbench();
@@ -255,6 +309,7 @@ EBusinessChange FBusinessSim::ProcessDueEvents(double Now)
 			// 작업대를 되돌리지 않으면 감싸기 연출이 다시 재생된다(architecture.md 4.7 F1)
 			ClearWorkbench();
 			EventHeap.Reset();
+			SteamerRefillEndTime = 0.0;
 			Changes |= EBusinessChange::Customers | EBusinessChange::Workbench | EBusinessChange::Steamer
 				| EBusinessChange::Shelf | EBusinessChange::Gold | EBusinessChange::DayEnded;
 			continue;

@@ -730,7 +730,7 @@ struct FBusinessDayInput
 class FBusinessSim
 {
 public:
-	/** 하루를 시작한다. 이전 상태는 모두 버리고 임대료(BaseRent + 해금된 재료의 RentIncrease 합)를 Result.Rent에 기록한 뒤(D17 · D18) 첫 손님 도착 · 영업 종료 이벤트를 넣는다. 모든 플래그를 돌려준다 */
+	/** 하루를 시작한다. 이전 상태는 모두 버리고 찜기 게이지를 MaxGauge로 채운다(T12 사용자 결정 Q1 — balance_sim.py와 같음). 임대료(BaseRent + 해금된 재료의 RentIncrease 합)를 Result.Rent에 기록한 뒤(D17 · D18) 첫 손님 도착 · 영업 종료 이벤트를 넣는다. 모든 플래그를 돌려준다 */
 	EBusinessChange StartDay(const FBusinessDayInput& InInput, double Now);
 
 	/**
@@ -843,7 +843,7 @@ private:
 | CustomerExpire | 그 ID가 아직 대기열에 있으면 빼고 MissedCustomers +1. 없으면 버림(D2) | Customers |
 | SteamerRefilled | 게이지 = MaxGauge, SteamerRefillEndTime = 0 | Steamer |
 | WorkbenchDone | Wrapping이면 배분(1.10: 손님 → 진열대 → 폐기). Trash면 비우기. 작업대 Empty | Workbench (+ Customers · Shelf · Gold) |
-| DayEnd | 진열 개수 합 + 작업대 1개(Empty · Trash가 아니면)를 DiscardCount에. 대기열 · 진열대 · 힙 비우기, 작업대 Empty(레시피 비움 — 4.7 F1). 대기 손님은 놓친 손님에 넣지 않는다(D14) | 전부 + DayEnded |
+| DayEnd | 진열 개수 합 + 작업대 1개(Empty · Trash가 아니면)를 DiscardCount에. 대기열 · 진열대 · 힙 비우기, 작업대 Empty(레시피 비움 — 4.7 F1), SteamerRefillEndTime = 0(힙과 함께 SteamerRefilled가 사라지므로 '다시 찌는 중이 아니면 0' 계약을 지킨다 — T12 사용자 결정 Q2). 대기 손님은 놓친 손님에 넣지 않는다(D14) | 전부 + DayEnded |
 - 영업 종료 때 쓰레기 연출 중이던 작업대는 이미 쓰레기 수에 들어갔으므로 폐기 수에 더하지 않는다. 감싸기 중이던 모찌는 GDD "작업대 위 재료는 폐기"에 따라 폐기 수 +1.
 
 ### 3.7 ABusinessGameMode — BusinessGameMode.h

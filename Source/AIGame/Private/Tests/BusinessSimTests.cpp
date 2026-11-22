@@ -6,7 +6,7 @@
 
 // 입력값은 리터럴로 쓰고 설계 문서 · 데이터에서 가져온 값에는 출처를 단다. 기대값도 리터럴 — 계산식으로 쓰면 구현과 같은 식을 되풀이한다
 
-// 하루 입력의 공통 부분. 입력: Data/Days.csv 1일차 · Balance.csv Default · Ingredients.csv 팥 행, 팥만 해금(GDD 시작 조건), 외형 5종(GDD 손님)
+// 하루 입력의 공통 부분. 입력: Data/Days.csv 1일차 · Steamer.csv 1레벨 · Balance.csv Default · Ingredients.csv 팥 행, 팥만 해금 · 찜기 1레벨(GDD 시작 조건), 외형 5종(GDD 손님)
 // 이름을 모듈 안에서 겹치지 않게 둔다 — unity build에서 다른 테스트 파일과 한 번역 단위로 합쳐질 수 있다
 static FBusinessDayInput MakeSimDayInput()
 {
@@ -17,8 +17,12 @@ static FBusinessDayInput MakeSimDayInput()
 	Input.Day.Patience = 25.f;
 	Input.Day.MaxQueue = 3;
 	Input.Day.AnyOrderRate = 0.10f;
+	Input.Steamer.MaxGauge = 3;
+	Input.Steamer.RegenTime = 6.f;
+	Input.Balance.RiceCakeCost = 2;
 	Input.Balance.NoFruitWeight = 8;
 	Input.Balance.PlaceTime = 0.2f;
+	Input.Balance.WrapTime = 0.6f;
 	Input.Balance.TrashTime = 0.5f;
 	Input.Balance.BaseRent = 50;
 
@@ -697,6 +701,121 @@ bool FBusinessSimCostAllowsDebtTest::RunTest(const FString& Parameters)
 	const EBusinessChange InDebtChanges = Sim.TapIngredient(EIngredient::RedBean, 2.0);
 	TestTrue(TEXT("In debt: accepted"), InDebtChanges != EBusinessChange::None);
 	TestEqual(TEXT("In debt: debt grows"), Sim.GetCurrentGold(), -4);
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FBusinessSimSteamerGaugeConsumedTest, "AIGame.BusinessSim.Steamer.GaugeConsumed",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+
+bool FBusinessSimSteamerGaugeConsumedTest::RunTest(const FString& Parameters)
+{
+	// R25 (GDD 찜기). 쓰레기 4번도 떡 1개를 쓰고 떡값을 낸다(architecture.md 3.6 전이표 메모)
+	// 입력: Steamer.csv 1레벨 MaxGauge 3, Balance.csv RiceCakeCost 2 · WrapTime 0.6, 팥 Cost 3, 시작 골드 100 · 임대료 50
+	FBusinessSim Sim;
+	Sim.StartDay(MakeSimDayInput(), 0.0);
+	// 하루는 가득 찬 게이지로 시작한다(T12 사용자 결정 Q1)
+	TestEqual(TEXT("Start: full gauge"), Sim.GetSteamerGauge(), 3);
+	TestEqual(TEXT("Start: not refilling"), Sim.GetSteamerRefillEndTime(), 0.0);
+
+	// t=1 빈 작업대 + 찜기 → 쓰레기(4번)
+	const EBusinessChange ExpectedTapChanges = EBusinessChange::Workbench | EBusinessChange::Steamer | EBusinessChange::Gold;
+	const EBusinessChange TrashChanges = Sim.TapSteamer(1.0);
+	TestTrue(TEXT("(4) Empty + steamer: Workbench | Steamer | Gold"), TrashChanges == ExpectedTapChanges);
+	TestTrue(TEXT("(4) Trash"), Sim.GetWorkbenchState() == EWorkbenchState::Trash);
+	TestEqual(TEXT("(4) gauge - 1"), Sim.GetSteamerGauge(), 2);
+	TestEqual(TEXT("(4) counted as trash"), Sim.GetResult().TrashCount, 1);
+	TestEqual(TEXT("(4) rice cake cost"), Sim.GetResult().IngredientCost, 2);
+	TestEqual(TEXT("(4) current gold"), Sim.GetCurrentGold(), 48);
+	Sim.ProcessDueEvents(2.0);
+
+	// t=3 팥, t=4 찜기 → 감싸기. 재료비 2 + 3 + 2 = 7
+	Sim.TapIngredient(EIngredient::RedBean, 3.0);
+	const EBusinessChange WrapChanges = Sim.TapSteamer(4.0);
+	TestTrue(TEXT("Base + steamer: Workbench | Steamer | Gold"), WrapChanges == ExpectedTapChanges);
+	TestTrue(TEXT("Base + steamer: Wrapping"), Sim.GetWorkbenchState() == EWorkbenchState::Wrapping);
+	TestEqual(TEXT("Base + steamer: gauge - 1"), Sim.GetSteamerGauge(), 1);
+	TestEqual(TEXT("Base + steamer: cost"), Sim.GetResult().IngredientCost, 7);
+	TestEqual(TEXT("Base + steamer: current gold"), Sim.GetCurrentGold(), 43);
+	TestEqual(TEXT("Base + steamer: not trash"), Sim.GetResult().TrashCount, 1);
+
+	// 감싸기 잠금(4.0 + WrapTime 0.6) 중의 찜기 탭은 무시되고 떡을 쓰지 않는다(R22)
+	const EBusinessChange WrapLockChanges = Sim.TapSteamer(4.3);
+	TestTrue(TEXT("t=4.3 during wrap lock: ignored"), WrapLockChanges == EBusinessChange::None);
+	TestEqual(TEXT("t=4.3: gauge unchanged"), Sim.GetSteamerGauge(), 1);
+	TestEqual(TEXT("t=4.3: cost unchanged"), Sim.GetResult().IngredientCost, 7);
+
+	// 감싸기가 끝나면(WorkbenchDone) 작업대가 빈다
+	Sim.ProcessDueEvents(5.0);
+	TestTrue(TEXT("Wrap done: Empty"), Sim.GetWorkbenchState() == EWorkbenchState::Empty);
+
+	// 영업 종료 뒤: 무시(architecture.md 4.2)
+	Sim.ProcessDueEvents(180.0);
+	const EBusinessChange AfterDayChanges = Sim.TapSteamer(181.0);
+	TestTrue(TEXT("After day end: ignored"), AfterDayChanges == EBusinessChange::None);
+	TestEqual(TEXT("After day end: gauge unchanged"), Sim.GetSteamerGauge(), 1);
+	TestEqual(TEXT("After day end: cost unchanged"), Sim.GetResult().IngredientCost, 7);
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FBusinessSimSteamerRefillTest, "AIGame.BusinessSim.Steamer.Refill",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+
+bool FBusinessSimSteamerRefillTest::RunTest(const FString& Parameters)
+{
+	// R26 (GDD 찜기). 게이지 0이면 작업대에 베이스가 있어도 무시한다(architecture.md 4.4)
+	// 입력: Steamer.csv 1레벨 MaxGauge 3 · RegenTime 6 — 이진수로 정확해 3.0 + 6.0 = 9.0 경계가 그대로 나온다
+	// 게이지는 빈 작업대 + 찜기(쓰레기 4번)로 쓴다. 탭 간격 1초 — 쓰레기 잠금(TrashTime 0.5)보다 길다
+	FBusinessSim Sim;
+	Sim.StartDay(MakeSimDayInput(), 0.0);
+
+	Sim.TapSteamer(1.0);
+	Sim.ProcessDueEvents(2.0);
+	Sim.TapSteamer(2.0);
+	Sim.ProcessDueEvents(3.0);
+	const EBusinessChange LastRiceCakeChanges = Sim.TapSteamer(3.0);
+	TestTrue(TEXT("t=3 last rice cake: Steamer changed"), EnumHasAnyFlags(LastRiceCakeChanges, EBusinessChange::Steamer));
+	TestEqual(TEXT("t=3: gauge 0"), Sim.GetSteamerGauge(), 0);
+	TestEqual(TEXT("t=3: refill end = Now + RegenTime"), Sim.GetSteamerRefillEndTime(), 9.0);
+
+	// 다시 찌는 중: 빈 작업대 탭도 무시한다 — 쓰레기 · 떡값 없음. 재료비 2 × 3 = 6
+	Sim.ProcessDueEvents(4.0);
+	const EBusinessChange RefillingEmptyChanges = Sim.TapSteamer(4.0);
+	TestTrue(TEXT("t=4 refilling, Empty: ignored"), RefillingEmptyChanges == EBusinessChange::None);
+	TestTrue(TEXT("t=4: still Empty"), Sim.GetWorkbenchState() == EWorkbenchState::Empty);
+	TestEqual(TEXT("t=4: not counted as trash"), Sim.GetResult().TrashCount, 3);
+	TestEqual(TEXT("t=4: no cost"), Sim.GetResult().IngredientCost, 6);
+
+	// 다시 찌는 중: 베이스가 있어도 무시한다. 6 + 팥 3 = 9
+	Sim.TapIngredient(EIngredient::RedBean, 5.0);
+	const EBusinessChange RefillingBaseChanges = Sim.TapSteamer(6.0);
+	TestTrue(TEXT("t=6 refilling, Base: ignored"), RefillingBaseChanges == EBusinessChange::None);
+	TestTrue(TEXT("t=6: still Base"), Sim.GetWorkbenchState() == EWorkbenchState::Base);
+	TestEqual(TEXT("t=6: no cost"), Sim.GetResult().IngredientCost, 9);
+
+	Sim.ProcessDueEvents(8.5);
+	TestEqual(TEXT("t=8.5 before refill end: gauge 0"), Sim.GetSteamerGauge(), 0);
+
+	// 경계: 다시 찌기 끝 시각과 같은 Now에서 찬다(Now 이하 — architecture.md 3.6 ProcessDueEvents)
+	const EBusinessChange RefillChanges = Sim.ProcessDueEvents(9.0);
+	TestTrue(TEXT("t=9 refilled: Steamer changed"), EnumHasAnyFlags(RefillChanges, EBusinessChange::Steamer));
+	TestEqual(TEXT("t=9: gauge = MaxGauge"), Sim.GetSteamerGauge(), 3);
+	TestEqual(TEXT("t=9: not refilling"), Sim.GetSteamerRefillEndTime(), 0.0);
+
+	const EBusinessChange AfterRefillChanges = Sim.TapSteamer(9.0);
+	TestTrue(TEXT("t=9 after refill: accepted"), AfterRefillChanges != EBusinessChange::None);
+	TestTrue(TEXT("t=9: Wrapping"), Sim.GetWorkbenchState() == EWorkbenchState::Wrapping);
+	TestEqual(TEXT("t=9: gauge - 1"), Sim.GetSteamerGauge(), 2);
+
+	// 다시 찌는 중에 영업이 끝나면 다시 찌기도 사라진다(T12 사용자 결정 Q2 — architecture.md 3.6 DayEnd)
+	// 입력: t=175 · 176에 게이지 2 → 0, 다시 찌기 끝 182 > 영업 종료 180
+	Sim.ProcessDueEvents(175.0);
+	Sim.TapSteamer(175.0);
+	Sim.ProcessDueEvents(176.0);
+	Sim.TapSteamer(176.0);
+	TestEqual(TEXT("t=176: refilling until 182"), Sim.GetSteamerRefillEndTime(), 182.0);
+	Sim.ProcessDueEvents(180.0);
+	TestTrue(TEXT("Day over"), Sim.IsDayOver());
+	TestEqual(TEXT("Day end: not refilling"), Sim.GetSteamerRefillEndTime(), 0.0);
 	return true;
 }
 

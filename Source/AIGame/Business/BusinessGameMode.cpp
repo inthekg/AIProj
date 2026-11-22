@@ -59,6 +59,15 @@ void ABusinessGameMode::TapIngredient(EIngredient Ingredient)
 	HandleChanges(Changes);
 }
 
+void ABusinessGameMode::TapSteamer()
+{
+	const double Now = GetWorld()->GetTimeSeconds();
+	const EBusinessChange Changes = Sim.TapSteamer(Now);
+	UE_LOG(LogAIGame, Log, TEXT("TapSteamer. Now=%.2f Accepted=%s"),
+		Now, Changes != EBusinessChange::None ? TEXT("true") : TEXT("false"));
+	HandleChanges(Changes);
+}
+
 void ABusinessGameMode::TapDiscard()
 {
 	const double Now = GetWorld()->GetTimeSeconds();
@@ -101,6 +110,8 @@ void ABusinessGameMode::HandleChanges(EBusinessChange Changes)
 	}
 	if (EnumHasAnyFlags(Changes, EBusinessChange::Steamer))
 	{
+		UE_LOG(LogAIGame, Log, TEXT("Steamer changed. Now=%.2f Gauge=%d/%d RefillEndTime=%.2f"),
+			Now, Sim.GetSteamerGauge(), Sim.GetInput().Steamer.MaxGauge, Sim.GetSteamerRefillEndTime());
 		OnSteamerChanged.Broadcast();
 	}
 	if (EnumHasAnyFlags(Changes, EBusinessChange::Shelf))

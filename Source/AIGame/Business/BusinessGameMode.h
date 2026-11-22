@@ -47,6 +47,10 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void TapIngredient(EIngredient Ingredient);
 
+	/** 찜기 탭 */
+	UFUNCTION(BlueprintCallable)
+	void TapSteamer();
+
 	/** 작업대 버리기 버튼 */
 	UFUNCTION(BlueprintCallable)
 	void TapDiscard();
@@ -58,7 +62,14 @@ public:
 	FRecipe GetWorkbenchRecipe() const { return Sim.GetWorkbenchRecipe(); }
 
 	UFUNCTION(BlueprintPure)
+	int32 GetSteamerGauge() const { return Sim.GetSteamerGauge(); }
+
+	UFUNCTION(BlueprintPure)
 	int32 GetSteamerMaxGauge() const { return Sim.GetInput().Steamer.MaxGauge; }
+
+	/** 다시 찌는 중이 아니면 0 */
+	UFUNCTION(BlueprintPure)
+	double GetSteamerRefillEndTime() const { return Sim.GetSteamerRefillEndTime(); }
 
 	/** 남은 시간 = 이 값 − 현재 월드 시각(Get Game Time in Seconds) */
 	UFUNCTION(BlueprintPure)
@@ -75,7 +86,6 @@ public:
 	UFUNCTION(BlueprintPure)
 	int32 GetCurrentGold() const { return Sim.GetCurrentGold(); }
 
-	// TODO(T12): TapSteamer · GetSteamerGauge · GetSteamerRefillEndTime
 	// TODO(T13): GetShelf, OnShelfChanged 툴팁에 "칸 i ← GetShelf()[i]"
 
 protected:
