@@ -49,6 +49,25 @@ void ABusinessGameMode::BeginPlay()
 	});
 }
 
+void ABusinessGameMode::TapIngredient(EIngredient Ingredient)
+{
+	const double Now = GetWorld()->GetTimeSeconds();
+	const EBusinessChange Changes = Sim.TapIngredient(Ingredient, Now);
+	UE_LOG(LogAIGame, Log, TEXT("TapIngredient %s. Now=%.2f Accepted=%s"),
+		*StaticEnum<EIngredient>()->GetNameStringByValue(static_cast<int64>(Ingredient)), Now,
+		Changes != EBusinessChange::None ? TEXT("true") : TEXT("false"));
+	HandleChanges(Changes);
+}
+
+void ABusinessGameMode::TapDiscard()
+{
+	const double Now = GetWorld()->GetTimeSeconds();
+	const EBusinessChange Changes = Sim.TapDiscard(Now);
+	UE_LOG(LogAIGame, Log, TEXT("TapDiscard. Now=%.2f Accepted=%s"),
+		Now, Changes != EBusinessChange::None ? TEXT("true") : TEXT("false"));
+	HandleChanges(Changes);
+}
+
 void ABusinessGameMode::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	GetWorldTimerManager().ClearTimer(SimTimerHandle);
@@ -69,7 +88,17 @@ void ABusinessGameMode::HandleChanges(EBusinessChange Changes)
 			Now, Sim.GetWaitingCustomers().Num(), Sim.GetResult().MissedCustomers);
 		OnCustomersChanged.Broadcast();
 	}
-	// TODO(T11): Workbench면 OnWorkbenchChanged.Broadcast(Sim.GetWorkbenchState()) — GetWorkbenchState가 T11에서 생긴다
+	if (EnumHasAnyFlags(Changes, EBusinessChange::Workbench))
+	{
+		const FRecipe& Recipe = Sim.GetWorkbenchRecipe();
+		UE_LOG(LogAIGame, Log, TEXT("Workbench changed. Now=%.2f State=%s Recipe=%s+%s Trash=%d IngredientCost=%d Gold=%d"),
+			Now,
+			*StaticEnum<EWorkbenchState>()->GetNameStringByValue(static_cast<int64>(Sim.GetWorkbenchState())),
+			*StaticEnum<EIngredient>()->GetNameStringByValue(static_cast<int64>(Recipe.Base)),
+			*StaticEnum<EIngredient>()->GetNameStringByValue(static_cast<int64>(Recipe.Fruit)),
+			Sim.GetResult().TrashCount, Sim.GetResult().IngredientCost, Sim.GetCurrentGold());
+		OnWorkbenchChanged.Broadcast(Sim.GetWorkbenchState());
+	}
 	if (EnumHasAnyFlags(Changes, EBusinessChange::Steamer))
 	{
 		OnSteamerChanged.Broadcast();
@@ -96,8 +125,14 @@ void ABusinessGameMode::HandleChanges(EBusinessChange Changes)
 		OnDayEnded.Broadcast(Result, Outcome);
 		return;
 	}
+	if (Sim.IsDayOver())
+	{
+		// 영업 종료 뒤 입력(architecture.md 4.2): Sim이 무시했고, 힙이 비어 다시 걸 타이머도 없다
+		UE_LOG(LogAIGame, Log, TEXT("Input after day end. Now=%.2f"), Now);
+		return;
+	}
 
-	// 영업 종료 전이면 DayEnd 이벤트가 힙에 남아 있다. 비어 있으면 GetValue가 checkf로 멈춘다(Optional.h)
+	// 위에서 영업 종료를 걸렀으므로 DayEnd 이벤트가 힙에 남아 있다. 비어 있으면 GetValue가 checkf로 멈춘다(Optional.h)
 	const double Delay = Sim.GetNextEventTime().GetValue() - Now;
 	// ADR-0004: 손님별 타이머 대신 힙 맨 앞 시각으로 핸들 하나만 다시 건다
 	// ProcessDueEvents(Now)가 Now 이하 이벤트를 모두 꺼냈으므로 Delay > 0이다. 0 이하면 타이머가 등록되지 않는다(TimerManager.cpp InternalSetTimer의 InRate > 0.f)

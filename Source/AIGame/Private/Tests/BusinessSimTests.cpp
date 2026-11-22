@@ -18,9 +18,12 @@ static FBusinessDayInput MakeSimDayInput()
 	Input.Day.MaxQueue = 3;
 	Input.Day.AnyOrderRate = 0.10f;
 	Input.Balance.NoFruitWeight = 8;
+	Input.Balance.PlaceTime = 0.2f;
+	Input.Balance.TrashTime = 0.5f;
 	Input.Balance.BaseRent = 50;
 
 	FIngredientRow RedBean;
+	RedBean.Cost = 3;
 	RedBean.OrderWeight = 10;
 	Input.Ingredients.Add(EIngredient::RedBean, RedBean);
 
@@ -409,6 +412,291 @@ bool FBusinessSimCustomerLookIndexInRangeTest::RunTest(const FString& Parameters
 	{
 		TestEqual(TEXT("Single look: always 0"), Customer.LookIndex, 0);
 	}
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FBusinessSimEventsZeroLockProcessedTest, "AIGame.BusinessSim.Events.ZeroLockProcessed",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+
+bool FBusinessSimEventsZeroLockProcessedTest::RunTest(const FString& Parameters)
+{
+	// T1 (GDD 기술 포인트 1 · ADR-0004). 잠금 시간이 0이면 WorkbenchDone 시각 = Now라 타이머 간격이 0 → 타이머로는 처리되지 않는다(TimerManager.cpp InternalSetTimer의 InRate > 0.f)
+	// 입력 처리 뒤 같은 Now의 ProcessDueEvents가 처리해야 한다(architecture.md 3.6 ProcessDueEvents · 3.7 HandleChanges)
+	// 입력: 잠금 시간 0. 첫 도착(5.5초 이상) 전인 t=1에 팥 → 팥(쓰레기 2번)
+	FBusinessDayInput Input = MakeSimDayInput();
+	Input.Balance.PlaceTime = 0.f;
+	Input.Balance.TrashTime = 0.f;
+
+	FBusinessSim Sim;
+	Sim.StartDay(Input, 0.0);
+	Sim.TapIngredient(EIngredient::RedBean, 1.0);
+	// 경계: 재료 올리기 잠금 0 — 같은 시각의 다음 입력을 받는다
+	Sim.TapIngredient(EIngredient::RedBean, 1.0);
+	TestTrue(TEXT("Trash"), Sim.GetWorkbenchState() == EWorkbenchState::Trash);
+	const TOptional<double> NextEventTime = Sim.GetNextEventTime();
+	TestTrue(TEXT("WorkbenchDone due at Now"), NextEventTime.IsSet() && NextEventTime.GetValue() == 1.0);
+
+	const EBusinessChange DueChanges = Sim.ProcessDueEvents(1.0);
+	TestTrue(TEXT("Same Now: Workbench changed"), EnumHasAnyFlags(DueChanges, EBusinessChange::Workbench));
+	TestTrue(TEXT("Same Now: Empty"), Sim.GetWorkbenchState() == EWorkbenchState::Empty);
+	TestTrue(TEXT("Same Now: recipe cleared"), Sim.GetWorkbenchRecipe() == FRecipe());
+
+	// 비워진 작업대는 타이머를 기다리지 않고 바로 다음 입력을 받는다
+	const EBusinessChange NextTapChanges = Sim.TapIngredient(EIngredient::RedBean, 1.0);
+	TestTrue(TEXT("Next tap accepted"), NextTapChanges != EBusinessChange::None);
+	TestTrue(TEXT("Next tap: Base"), Sim.GetWorkbenchState() == EWorkbenchState::Base);
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FBusinessSimWorkbenchTransitionTableTest, "AIGame.BusinessSim.Workbench.TransitionTable",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+
+bool FBusinessSimWorkbenchTransitionTableTest::RunTest(const FString& Parameters)
+{
+	// R1 · R19 · R21 · T2 (GDD 재료와 조합 · 제작 · 기술 포인트 2)
+	// 기대값: architecture.md 3.6 작업대 전이표, 괄호 = GDD 쓰레기 표 번호. 결과가 현재 상태와 같으면 무시된 입력이다
+	TestTrue(TEXT("Empty + Base -> Base"),
+		FBusinessSim::NextWorkbenchState(EWorkbenchState::Empty, EWorkbenchInput::Base) == EWorkbenchState::Base);
+	TestTrue(TEXT("Empty + Fruit -> Trash (1)"),
+		FBusinessSim::NextWorkbenchState(EWorkbenchState::Empty, EWorkbenchInput::Fruit) == EWorkbenchState::Trash);
+	TestTrue(TEXT("Empty + Steamer -> Trash (4)"),
+		FBusinessSim::NextWorkbenchState(EWorkbenchState::Empty, EWorkbenchInput::Steamer) == EWorkbenchState::Trash);
+	TestTrue(TEXT("Empty + Discard -> ignored (R21)"),
+		FBusinessSim::NextWorkbenchState(EWorkbenchState::Empty, EWorkbenchInput::Discard) == EWorkbenchState::Empty);
+
+	TestTrue(TEXT("Base + Base -> Trash (2)"),
+		FBusinessSim::NextWorkbenchState(EWorkbenchState::Base, EWorkbenchInput::Base) == EWorkbenchState::Trash);
+	TestTrue(TEXT("Base + Fruit -> BaseFruit"),
+		FBusinessSim::NextWorkbenchState(EWorkbenchState::Base, EWorkbenchInput::Fruit) == EWorkbenchState::BaseFruit);
+	TestTrue(TEXT("Base + Steamer -> Wrapping"),
+		FBusinessSim::NextWorkbenchState(EWorkbenchState::Base, EWorkbenchInput::Steamer) == EWorkbenchState::Wrapping);
+	TestTrue(TEXT("Base + Discard -> Trash"),
+		FBusinessSim::NextWorkbenchState(EWorkbenchState::Base, EWorkbenchInput::Discard) == EWorkbenchState::Trash);
+
+	TestTrue(TEXT("BaseFruit + Base -> Trash (5)"),
+		FBusinessSim::NextWorkbenchState(EWorkbenchState::BaseFruit, EWorkbenchInput::Base) == EWorkbenchState::Trash);
+	TestTrue(TEXT("BaseFruit + Fruit -> Trash (3)"),
+		FBusinessSim::NextWorkbenchState(EWorkbenchState::BaseFruit, EWorkbenchInput::Fruit) == EWorkbenchState::Trash);
+	TestTrue(TEXT("BaseFruit + Steamer -> Wrapping"),
+		FBusinessSim::NextWorkbenchState(EWorkbenchState::BaseFruit, EWorkbenchInput::Steamer) == EWorkbenchState::Wrapping);
+	TestTrue(TEXT("BaseFruit + Discard -> Trash"),
+		FBusinessSim::NextWorkbenchState(EWorkbenchState::BaseFruit, EWorkbenchInput::Discard) == EWorkbenchState::Trash);
+
+	TestTrue(TEXT("Wrapping + Base -> ignored"),
+		FBusinessSim::NextWorkbenchState(EWorkbenchState::Wrapping, EWorkbenchInput::Base) == EWorkbenchState::Wrapping);
+	TestTrue(TEXT("Wrapping + Fruit -> ignored"),
+		FBusinessSim::NextWorkbenchState(EWorkbenchState::Wrapping, EWorkbenchInput::Fruit) == EWorkbenchState::Wrapping);
+	TestTrue(TEXT("Wrapping + Steamer -> ignored"),
+		FBusinessSim::NextWorkbenchState(EWorkbenchState::Wrapping, EWorkbenchInput::Steamer) == EWorkbenchState::Wrapping);
+	TestTrue(TEXT("Wrapping + Discard -> ignored"),
+		FBusinessSim::NextWorkbenchState(EWorkbenchState::Wrapping, EWorkbenchInput::Discard) == EWorkbenchState::Wrapping);
+
+	TestTrue(TEXT("Trash + Base -> ignored"),
+		FBusinessSim::NextWorkbenchState(EWorkbenchState::Trash, EWorkbenchInput::Base) == EWorkbenchState::Trash);
+	TestTrue(TEXT("Trash + Fruit -> ignored"),
+		FBusinessSim::NextWorkbenchState(EWorkbenchState::Trash, EWorkbenchInput::Fruit) == EWorkbenchState::Trash);
+	TestTrue(TEXT("Trash + Steamer -> ignored"),
+		FBusinessSim::NextWorkbenchState(EWorkbenchState::Trash, EWorkbenchInput::Steamer) == EWorkbenchState::Trash);
+	TestTrue(TEXT("Trash + Discard -> ignored"),
+		FBusinessSim::NextWorkbenchState(EWorkbenchState::Trash, EWorkbenchInput::Discard) == EWorkbenchState::Trash);
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FBusinessSimWorkbenchTrashCountTest, "AIGame.BusinessSim.Workbench.TrashCount",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+
+bool FBusinessSimWorkbenchTrashCountTest::RunTest(const FString& Parameters)
+{
+	// R20 (GDD 제작). 쓰레기 수는 판정 순간에 센다(architecture.md 3.6 전이표 메모). 4번(빈 작업대 + 찜기)은 T12 Steamer.GaugeConsumed
+	// 입력: 딸기 해금(Ingredients.csv 딸기 행 Cost 5). 탭 간격 1초 — 잠금(PlaceTime 0.2 · TrashTime 0.5)보다 길다
+	FBusinessDayInput Input = MakeSimDayInput();
+	FIngredientRow Strawberry;
+	Strawberry.Cost = 5;
+	Input.Ingredients.Add(EIngredient::Strawberry, Strawberry);
+
+	FBusinessSim Sim;
+	Sim.StartDay(Input, 0.0);
+
+	// (1) 빈 작업대 + 과일
+	Sim.TapIngredient(EIngredient::Strawberry, 1.0);
+	TestEqual(TEXT("(1) Empty + fruit: counted at judgment"), Sim.GetResult().TrashCount, 1);
+	Sim.ProcessDueEvents(2.0);
+	TestTrue(TEXT("(1) WorkbenchDone: Empty"), Sim.GetWorkbenchState() == EWorkbenchState::Empty);
+	TestTrue(TEXT("(1) WorkbenchDone: recipe cleared"), Sim.GetWorkbenchRecipe() == FRecipe());
+
+	// (2) 베이스 + 베이스
+	Sim.TapIngredient(EIngredient::RedBean, 3.0);
+	Sim.TapIngredient(EIngredient::RedBean, 4.0);
+	TestEqual(TEXT("(2) Base + base"), Sim.GetResult().TrashCount, 2);
+	Sim.ProcessDueEvents(5.0);
+
+	// (3) 베이스+과일 + 과일
+	Sim.TapIngredient(EIngredient::RedBean, 6.0);
+	Sim.TapIngredient(EIngredient::Strawberry, 7.0);
+	Sim.TapIngredient(EIngredient::Strawberry, 8.0);
+	TestEqual(TEXT("(3) BaseFruit + fruit"), Sim.GetResult().TrashCount, 3);
+	Sim.ProcessDueEvents(9.0);
+
+	// (5) 베이스+과일 + 베이스
+	Sim.TapIngredient(EIngredient::RedBean, 10.0);
+	Sim.TapIngredient(EIngredient::Strawberry, 11.0);
+	Sim.TapIngredient(EIngredient::RedBean, 12.0);
+	TestEqual(TEXT("(5) BaseFruit + base"), Sim.GetResult().TrashCount, 4);
+	Sim.ProcessDueEvents(13.0);
+
+	// 버리기는 재료비를 더하지 않는다(GDD 버리기 버튼). 여기까지 재료비: 5 + 6 + 13 + 11 + 3 = 38
+	Sim.TapIngredient(EIngredient::RedBean, 14.0);
+	Sim.TapDiscard(15.0);
+	TestEqual(TEXT("Discard on Base: counted"), Sim.GetResult().TrashCount, 5);
+	TestEqual(TEXT("Discard on Base: no cost"), Sim.GetResult().IngredientCost, 38);
+	Sim.ProcessDueEvents(16.0);
+
+	// 38 + 3 + 5 = 46
+	Sim.TapIngredient(EIngredient::RedBean, 17.0);
+	Sim.TapIngredient(EIngredient::Strawberry, 18.0);
+	Sim.TapDiscard(19.0);
+	TestEqual(TEXT("Discard on BaseFruit: counted"), Sim.GetResult().TrashCount, 6);
+	TestEqual(TEXT("Discard on BaseFruit: no cost"), Sim.GetResult().IngredientCost, 46);
+	Sim.ProcessDueEvents(20.0);
+
+	// 빈 작업대 버리기는 무시(R21)
+	const EBusinessChange EmptyDiscardChanges = Sim.TapDiscard(21.0);
+	TestTrue(TEXT("Discard on Empty: ignored"), EmptyDiscardChanges == EBusinessChange::None);
+	TestEqual(TEXT("Discard on Empty: not counted"), Sim.GetResult().TrashCount, 6);
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FBusinessSimWorkbenchInputLockedTest, "AIGame.BusinessSim.Workbench.InputLocked",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+
+bool FBusinessSimWorkbenchInputLockedTest::RunTest(const FString& Parameters)
+{
+	// R22 (GDD 제작 입력 잠금). 시나리오: architecture.md 4.4. 무시된 입력은 재료비도 내지 않는다
+	// 끝에 영업 종료 뒤(architecture.md 4.2) · 미해금 재료 · None(architecture.md 3.6 TapIngredient) 무시도 본다(T11 사용자 결정 Q4)
+	// 입력: 딸기 해금(Ingredients.csv Cost 5). 잠금 끝 경계는 TrashTime 0.5로 본다 — 이진수로 정확해 10.0 + 0.5 = 10.5가 그대로 나온다(PlaceTime 0.2f는 double로 바꾸면 오차)
+	FBusinessDayInput Input = MakeSimDayInput();
+	FIngredientRow Strawberry;
+	Strawberry.Cost = 5;
+	Input.Ingredients.Add(EIngredient::Strawberry, Strawberry);
+
+	FBusinessSim Sim;
+	Sim.StartDay(Input, 0.0);
+
+	// t=10 빈 작업대 + 딸기 → 쓰레기, 10.5까지 잠금. 시작 골드 100 − 임대료 50 − 딸기 5
+	Sim.TapIngredient(EIngredient::Strawberry, 10.0);
+	TestEqual(TEXT("t=10: gold after trash tap"), Sim.GetCurrentGold(), 45);
+
+	const EBusinessChange TrashLockTapChanges = Sim.TapIngredient(EIngredient::RedBean, 10.2);
+	TestTrue(TEXT("t=10.2 ingredient during trash lock: ignored"), TrashLockTapChanges == EBusinessChange::None);
+	const EBusinessChange TrashLockDiscardChanges = Sim.TapDiscard(10.2);
+	TestTrue(TEXT("t=10.2 discard during trash lock: ignored"), TrashLockDiscardChanges == EBusinessChange::None);
+	TestTrue(TEXT("t=10.2: still Trash"), Sim.GetWorkbenchState() == EWorkbenchState::Trash);
+	TestEqual(TEXT("t=10.2: no cost"), Sim.GetCurrentGold(), 45);
+
+	// 경계: 잠금 끝(10.5)과 같은 시각. 잠금은 '이 시각 전'까지다(architecture.md 3.6 InputLockEndTime)
+	Sim.ProcessDueEvents(10.5);
+	const EBusinessChange BoundaryChanges = Sim.TapIngredient(EIngredient::RedBean, 10.5);
+	TestTrue(TEXT("t=10.5 at lock end: accepted"), BoundaryChanges != EBusinessChange::None);
+	TestTrue(TEXT("t=10.5: Base"), Sim.GetWorkbenchState() == EWorkbenchState::Base);
+
+	// 재료 올리기 잠금(PlaceTime 0.2) 중. 45 − 팥 3
+	const EBusinessChange PlaceLockDiscardChanges = Sim.TapDiscard(10.6);
+	TestTrue(TEXT("t=10.6 discard during place lock: ignored"), PlaceLockDiscardChanges == EBusinessChange::None);
+	const EBusinessChange PlaceLockTapChanges = Sim.TapIngredient(EIngredient::Strawberry, 10.6);
+	TestTrue(TEXT("t=10.6 ingredient during place lock: ignored"), PlaceLockTapChanges == EBusinessChange::None);
+	TestTrue(TEXT("t=10.6: still Base"), Sim.GetWorkbenchState() == EWorkbenchState::Base);
+	TestEqual(TEXT("t=10.6: no cost"), Sim.GetCurrentGold(), 42);
+
+	const EBusinessChange AfterLockDiscardChanges = Sim.TapDiscard(11.5);
+	TestTrue(TEXT("t=11.5 discard after place lock: accepted"), AfterLockDiscardChanges != EBusinessChange::None);
+	TestTrue(TEXT("t=11.5: Trash"), Sim.GetWorkbenchState() == EWorkbenchState::Trash);
+
+	// 미해금 재료 · None: 무시. None이 IsBaseIngredient에 닿으면 checkNoEntry로 멈춘다
+	Sim.ProcessDueEvents(12.0);
+	const EBusinessChange LockedIngredientChanges = Sim.TapIngredient(EIngredient::Mango, 13.0);
+	TestTrue(TEXT("Not unlocked: ignored"), LockedIngredientChanges == EBusinessChange::None);
+	const EBusinessChange NoneIngredientChanges = Sim.TapIngredient(EIngredient::None, 13.0);
+	TestTrue(TEXT("None: ignored"), NoneIngredientChanges == EBusinessChange::None);
+	TestTrue(TEXT("Not unlocked · None: still Empty"), Sim.GetWorkbenchState() == EWorkbenchState::Empty);
+	TestEqual(TEXT("Not unlocked · None: no cost"), Sim.GetCurrentGold(), 42);
+
+	// 영업 종료 뒤: 무시
+	Sim.ProcessDueEvents(180.0);
+	TestTrue(TEXT("Day over"), Sim.IsDayOver());
+	const EBusinessChange AfterDayTapChanges = Sim.TapIngredient(EIngredient::RedBean, 181.0);
+	TestTrue(TEXT("After day end: ingredient ignored"), AfterDayTapChanges == EBusinessChange::None);
+	const EBusinessChange AfterDayDiscardChanges = Sim.TapDiscard(181.0);
+	TestTrue(TEXT("After day end: discard ignored"), AfterDayDiscardChanges == EBusinessChange::None);
+	TestTrue(TEXT("After day end: Empty"), Sim.GetWorkbenchState() == EWorkbenchState::Empty);
+	TestEqual(TEXT("After day end: no cost"), Sim.GetCurrentGold(), 42);
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FBusinessSimCostChargedOnTapTest, "AIGame.BusinessSim.Cost.ChargedOnTap",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+
+bool FBusinessSimCostChargedOnTapTest::RunTest(const FString& Parameters)
+{
+	// R5 (GDD 경제). 쓰레기가 되는 탭도 낸다(architecture.md 3.6 전이표 메모). 떡 재료비는 T12 TapSteamer
+	// 입력: 팥 Cost 3 · 딸기 Cost 5(Ingredients.csv), 시작 골드 100 · 임대료 50
+	FBusinessDayInput Input = MakeSimDayInput();
+	FIngredientRow Strawberry;
+	Strawberry.Cost = 5;
+	Input.Ingredients.Add(EIngredient::Strawberry, Strawberry);
+
+	FBusinessSim Sim;
+	Sim.StartDay(Input, 0.0);
+
+	const EBusinessChange BaseChanges = Sim.TapIngredient(EIngredient::RedBean, 1.0);
+	TestTrue(TEXT("Base tap: Workbench changed"), EnumHasAnyFlags(BaseChanges, EBusinessChange::Workbench));
+	TestTrue(TEXT("Base tap: Gold changed"), EnumHasAnyFlags(BaseChanges, EBusinessChange::Gold));
+	TestEqual(TEXT("Base tap: cost"), Sim.GetResult().IngredientCost, 3);
+	TestEqual(TEXT("Base tap: current gold"), Sim.GetCurrentGold(), 47);
+
+	const EBusinessChange FruitChanges = Sim.TapIngredient(EIngredient::Strawberry, 2.0);
+	TestTrue(TEXT("Fruit tap: Gold changed"), EnumHasAnyFlags(FruitChanges, EBusinessChange::Gold));
+	TestEqual(TEXT("Fruit tap: cost"), Sim.GetResult().IngredientCost, 8);
+	TestEqual(TEXT("Fruit tap: current gold"), Sim.GetCurrentGold(), 42);
+	// 배분(T13)이 완성품 조합으로 쓴다
+	TestTrue(TEXT("Recipe = RedBean + Strawberry"),
+		Sim.GetWorkbenchRecipe().Base == EIngredient::RedBean && Sim.GetWorkbenchRecipe().Fruit == EIngredient::Strawberry);
+
+	// 베이스+과일 + 과일 → 쓰레기(3번)여도 낸다
+	const EBusinessChange TrashChanges = Sim.TapIngredient(EIngredient::Strawberry, 3.0);
+	TestTrue(TEXT("Trash tap: Gold changed"), EnumHasAnyFlags(TrashChanges, EBusinessChange::Gold));
+	TestEqual(TEXT("Trash tap: cost"), Sim.GetResult().IngredientCost, 13);
+
+	// 버리기는 재료비가 없다. 13 + 팥 3 = 16
+	Sim.ProcessDueEvents(4.0);
+	Sim.TapIngredient(EIngredient::RedBean, 5.0);
+	const EBusinessChange DiscardChanges = Sim.TapDiscard(6.0);
+	TestTrue(TEXT("Discard: Workbench changed"), EnumHasAnyFlags(DiscardChanges, EBusinessChange::Workbench));
+	TestFalse(TEXT("Discard: Gold not changed"), EnumHasAnyFlags(DiscardChanges, EBusinessChange::Gold));
+	TestEqual(TEXT("Discard: cost unchanged"), Sim.GetResult().IngredientCost, 16);
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FBusinessSimCostAllowsDebtTest, "AIGame.BusinessSim.Cost.AllowsDebt",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+
+bool FBusinessSimCostAllowsDebtTest::RunTest(const FString& Parameters)
+{
+	// R6 (GDD 경제). 재료 탭은 골드를 검사하지 않는다
+	// 입력: 시작 골드 52 → 임대료 50 뒤 2, 팥 Cost 3
+	FBusinessDayInput Input = MakeSimDayInput();
+	Input.GoldAtStart = 52;
+
+	FBusinessSim Sim;
+	Sim.StartDay(Input, 0.0);
+	const EBusinessChange DebtChanges = Sim.TapIngredient(EIngredient::RedBean, 1.0);
+	TestTrue(TEXT("Gold < cost: accepted"), DebtChanges != EBusinessChange::None);
+	TestTrue(TEXT("Gold < cost: Base"), Sim.GetWorkbenchState() == EWorkbenchState::Base);
+	TestEqual(TEXT("Gold < cost: debt"), Sim.GetCurrentGold(), -1);
+
+	// 빚인 채로도 받는다(베이스 + 베이스 → 쓰레기 2번)
+	const EBusinessChange InDebtChanges = Sim.TapIngredient(EIngredient::RedBean, 2.0);
+	TestTrue(TEXT("In debt: accepted"), InDebtChanges != EBusinessChange::None);
+	TestEqual(TEXT("In debt: debt grows"), Sim.GetCurrentGold(), -4);
 	return true;
 }
 

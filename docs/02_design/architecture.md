@@ -758,8 +758,8 @@ public:
 	/** 힙 맨 앞 이벤트 시각. 영업이 끝나 힙이 비면 unset */
 	TOptional<double> GetNextEventTime() const;
 
-	/** 작업대 전이표(GDD 제작 상태도). 결과가 Current와 같으면 무시된 입력이다. 테스트가 표 그대로 검증한다 */
-	static EWorkbenchState NextWorkbenchState(EWorkbenchState Current, EWorkbenchInput Input);
+	/** 작업대 전이표(GDD 제작 상태도). 결과가 Current와 같으면 무시된 입력이다. 테스트가 표 그대로 검증한다. 인자 이름은 멤버 Input을 가리지 않게 WorkbenchInput(T11) */
+	static EWorkbenchState NextWorkbenchState(EWorkbenchState Current, EWorkbenchInput WorkbenchInput);
 
 	const TArray<FCustomer>& GetWaitingCustomers() const { return WaitingCustomers; }
 	const TArray<FShelfEntry>& GetShelf() const { return Shelf; }
@@ -816,6 +816,12 @@ private:
 
 	/** 판매: 판매가(data-schema.md Ingredients 절)를 매출에, 판매 수 +1. WaitingIndex가 INDEX_NONE이 아니면 그 손님을 대기열에서 뺀다 */
 	void Sell(const FRecipe& Recipe, int32 WaitingIndex);
+
+	/** 작업대를 Empty로 되돌리고 레시피를 비운다. 입력 잠금은 건드리지 않는다(T11) */
+	void ClearWorkbench();
+
+	/** 작업대를 쓰레기로 바꾸고 쓰레기 수 +1 · TrashTime 동안 입력 잠금 · WorkbenchDone 예약을 함께 한다. 재료비는 부르는 쪽이 처리한다(T11) */
+	void TrashWorkbench(double Now);
 };
 ```
 
@@ -867,7 +873,7 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FOnBusinessChanged OnCustomersChanged;
 
-	/** 작업대 상태가 바뀜. Wrapping · Trash면 연출 시작 — 길이는 GetBalance()의 WrapTime · TrashTime */
+	/** 작업대 상태가 바뀜. Base · BaseFruit면 재료 올리기, Wrapping이면 감싸기, Trash면 쓰레기 연출 시작 — 길이는 GetBalance()의 PlaceTime · WrapTime · TrashTime */
 	UPROPERTY(BlueprintAssignable)
 	FOnWorkbenchChanged OnWorkbenchChanged;
 
@@ -957,6 +963,7 @@ private:
 	/**
 	 * 모든 Sim 호출 뒤에 부른다. ProcessDueEvents(Now)로 Now 이하 이벤트를 마저 처리하고, 바뀐 부분의 델리게이트를 보낸 뒤,
 	 * 영업 종료면 결산(GameInstance::ApplyDayResult → OnDayEnded), 아니면 다음 이벤트 시각으로 타이머를 다시 건다.
+	 * 영업이 이미 끝난 뒤의 입력(4.2)이면 로그만 남긴다.
 	 * 타이머 콜백으로도 쓴다(Changes = None을 payload로 바인딩).
 	 */
 	void HandleChanges(EBusinessChange Changes);
@@ -965,6 +972,7 @@ private:
 처리 메모
 - `BeginPlay` 순서 중요: `Super::BeginPlay()`가 BP BeginPlay(위젯 생성 · 델리게이트 구독)를 먼저 실행해야, 이어지는 `StartDay` 뒤의 첫 알림을 위젯이 받는다.
 - 타이머: `GetWorldTimerManager().SetTimer(SimTimerHandle, FTimerDelegate::CreateUObject(this, &ABusinessGameMode::HandleChanges, EBusinessChange::None), Delay, false)`. 콜백 전용 멤버 함수를 따로 두지 않는다.
+- 영업 종료 뒤 입력(4.2): 입력 함수는 Sim 호출 뒤 그대로 `HandleChanges`를 부른다. `HandleChanges`는 DayEnded 분기 다음에 `Sim.IsDayOver()`면 로그만 남기고 끝낸다 — 힙이 비어 `GetNextEventTime()`이 unset이라 `GetValue()`가 checkf로 멈추기 때문이다(T11 사용자 결정 Q1).
 - 백그라운드: `ApplicationWillEnterBackgroundDelegate.AddWeakLambda(this, …)`에서 `UGameplayStatics::SetGamePaused(this, true)`. 복귀: `ApplicationHasEnteredForegroundDelegate.AddWeakLambda(this, …)`에서 `OnResumeRequired.Broadcast()`. 둘 다 영업 중(`!Sim.IsDayOver()`)일 때만 한다 — 결산 · 게임 오버 팝업 위에 "계속하기"가 뜨지 않게(4.7 F2). EndPlay에서 `RemoveAll(this)`.
 - Android 생명주기 델리게이트는 `FAppEventManager` 큐를 거쳐 게임 스레드에서 처리된다(`Runtime/Launch/Private/Android/AndroidEventManager.cpp` 72행 `check(IsInGameThread())`, LaunchAndroid.cpp 1511행 `EnqueueAppEvent`). 실기기 확인(T06, 2026-11-23): 백그라운드 콜백 · `Entering background` 로그가 `Init`(`Data validation passed`) · 타이머 콜백(`Customers changed`)과 같은 TID에서, 이벤트 스레드(`SuspendApp_EventThread`)와 다른 TID에서 실행됐다.
 - 시드: `FDateTime::Now().GetTicks()`를 int32로 줄여 쓴다 [AI 판단].
@@ -997,6 +1005,7 @@ private:
 | `DECLARE_DYNAMIC_MULTICAST_DELEGATE` · `_TwoParams` | Runtime/Core/Public/Delegates/DelegateCombinations.h 38 · 62 |
 | `TArray::HeapPush` · `HeapPop` · `HeapTop` | Runtime/Core/Public/Containers/Array.h 3359 · 3435 · 3533 |
 | `TOptional` | Runtime/Core/Public/Misc/Optional.h 56 |
+| `TMap::Find`(const) | Runtime/Core/Public/Containers/Map.h 568 (T11) |
 | `FRandomStream::Initialize` · `FRand` · `RandRange` · `FRandRange` | Runtime/Core/Public/Math/RandomStream.h 63 · 176 · 197 · 209 |
 | `FMath::RoundToInt` | Runtime/Core/Public/GenericPlatform/GenericPlatformMath.h 323 |
 | `ENUM_CLASS_FLAGS` | Runtime/Core/Public/Misc/EnumClassFlags.h 6 |
@@ -1034,6 +1043,8 @@ GDD 기능을 그대로 옮긴 함수(구매 · 탭 · 조회 · 결산)는 추�
 | `UShopGameInstance::FindIngredientRow` · `FindSteamerRow` | 반복 | 각각 3곳 이상 |
 | `UShopGameInstance::SaveProgress` | 반복 | 구매 2 · 결산 · 백그라운드 4곳 |
 | `FBusinessSim::PushEvent` · `Sell` | 반복 | 이벤트 5종 예약 / 대기 손님 판매 · 도착 즉시 판매 |
+| `FBusinessSim::TrashWorkbench` | 반복 | 쓰레기 처리(쓰레기 수 · 입력 잠금 · WorkbenchDone 예약)가 TapIngredient · TapDiscard · TapSteamer 3곳(T11 사용자 결정 Q3) |
+| `FBusinessSim::ClearWorkbench` | 반복 | 작업대 Empty · 레시피 비움이 StartDay · WorkbenchDone · DayEnd 3곳(T11 사용자 결정) |
 - 일부러 만들지 않은 것: 타이머 콜백 전용 함수(payload 바인딩), 백그라운드 콜백 함수(AddWeakLambda · SaveProgress 직접 바인딩), 불러오기 · 검증 함수(Init 한 곳), 조합 판매가 함수(Sell 한 곳), 조합 → 이미지 표(ADR-0010).
 
 ### 3.11 3단계 결정 — GDD에 없던 규칙 (ADR-0015)
@@ -1140,6 +1151,7 @@ sequenceDiagram
 ```
 - 같은 시각이면 순번이 작은 쪽이 먼저다. DayEnd는 StartDay에서 넣어 순번이 가장 작으므로, 영업 종료와 같은 시각의 이벤트보다 먼저 처리된다(`AIGame.BusinessSim.Events.SameTimeOrder`).
 - 쓰레기 연출 중에 영업이 끝나면 이미 쓰레기 수에 들어갔으므로 폐기 수에 더하지 않고 작업대만 Empty로 되돌린다.
+- 영업 종료 뒤 입력도 GM은 `HandleChanges`를 부르고, `HandleChanges`는 영업이 이미 끝났으면 로그만 남기고 타이머를 걸지 않는다(3.7 처리 메모).
 
 ### 4.3 예외 — 일시정지 · 백그라운드 진입과 복귀
 ```mermaid

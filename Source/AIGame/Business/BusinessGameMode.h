@@ -22,6 +22,7 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FOnBusinessChanged OnCustomersChanged;
 
+	/** 작업대 상태가 바뀜. Base · BaseFruit면 재료 올리기, Wrapping이면 감싸기, Trash면 쓰레기 연출 시작 — 길이는 GetBalance()의 PlaceTime · WrapTime · TrashTime */
 	UPROPERTY(BlueprintAssignable)
 	FOnWorkbenchChanged OnWorkbenchChanged;
 
@@ -42,8 +43,19 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FOnBusinessChanged OnResumeRequired;
 
+	/** 재료통 탭 */
+	UFUNCTION(BlueprintCallable)
+	void TapIngredient(EIngredient Ingredient);
+
+	/** 작업대 버리기 버튼 */
+	UFUNCTION(BlueprintCallable)
+	void TapDiscard();
+
 	UFUNCTION(BlueprintPure)
 	TArray<FCustomer> GetWaitingCustomers() const { return Sim.GetWaitingCustomers(); }
+
+	UFUNCTION(BlueprintPure)
+	FRecipe GetWorkbenchRecipe() const { return Sim.GetWorkbenchRecipe(); }
 
 	UFUNCTION(BlueprintPure)
 	int32 GetSteamerMaxGauge() const { return Sim.GetInput().Steamer.MaxGauge; }
@@ -63,7 +75,6 @@ public:
 	UFUNCTION(BlueprintPure)
 	int32 GetCurrentGold() const { return Sim.GetCurrentGold(); }
 
-	// TODO(T11): TapIngredient · TapDiscard · GetWorkbenchRecipe (architecture.md 3.7) — FBusinessSim 입력 함수와 함께 추가
 	// TODO(T12): TapSteamer · GetSteamerGauge · GetSteamerRefillEndTime
 	// TODO(T13): GetShelf, OnShelfChanged 툴팁에 "칸 i ← GetShelf()[i]"
 
@@ -85,6 +96,7 @@ private:
 	/**
 	 * 모든 Sim 호출 뒤에 부른다. ProcessDueEvents(Now)로 Now 이하 이벤트를 마저 처리하고 바뀐 부분의 델리게이트를 보낸 뒤,
 	 * 영업 종료면 결산(UShopGameInstance::ApplyDayResult → OnDayEnded), 아니면 다음 이벤트 시각으로 타이머를 다시 건다.
+	 * 영업이 이미 끝난 뒤의 입력(architecture.md 4.2)이면 로그만 남긴다.
 	 * 타이머 콜백으로도 쓴다(Changes = None을 payload로 바인딩).
 	 */
 	void HandleChanges(EBusinessChange Changes);

@@ -6,10 +6,20 @@
 #include "Misc/Optional.h"
 #include "Shop/ShopTypes.h"
 
+/** 작업대 입력 종류. 전이표의 열 */
+enum class EWorkbenchInput : uint8
+{
+	Base,
+	Fruit,
+	Steamer,
+	Discard
+};
+
 enum class EBusinessEventType : uint8
 {
 	CustomerArrive,
 	CustomerExpire,
+	WorkbenchDone,
 	DayEnd
 };
 
@@ -57,16 +67,26 @@ struct FBusinessDayInput
 class FBusinessSim
 {
 public:
-	//영업 시작 
+	//영업 시작
 	EBusinessChange StartDay(const FBusinessDayInput& InInput, double Now);
 
-	/** Now 이하인 이벤트를 (시각, 순번) 순으로 모두 처리한다.*/
+	/** 재료통 탭. 무시한 입력이면 None*/
+	EBusinessChange TapIngredient(EIngredient Ingredient, double Now);
+
+	/** 버리기 버튼. 무시한 입력이면 None */
+	EBusinessChange TapDiscard(double Now);
+
+	/**Now 이하인 이벤트를 (시각, 순번) 순으로 모두 처리한다.*/
 	EBusinessChange ProcessDueEvents(double Now);
 
-	/** 힙 맨 앞 이벤트 시각. 영업이 끝나 힙이 비면 unset */
 	TOptional<double> GetNextEventTime() const;
 
+	/** 작업대 전이표 */
+	static EWorkbenchState NextWorkbenchState(EWorkbenchState Current, EWorkbenchInput WorkbenchInput);
+
 	const TArray<FCustomer>& GetWaitingCustomers() const { return WaitingCustomers; }
+	EWorkbenchState GetWorkbenchState() const { return WorkbenchState; }
+	const FRecipe& GetWorkbenchRecipe() const { return WorkbenchRecipe; }
 
 	double GetDayEndTime() const { return DayEndTime; }
 	const FDayResult& GetResult() const { return Result; }
@@ -87,10 +107,25 @@ private:
 	TArray<FBusinessEvent> EventHeap;
 	int32 NextEventSeq = 0;
 
+	EWorkbenchState WorkbenchState = EWorkbenchState::Empty;
+
+	/** 작업대에 올린 재료. 쓰레기가 된 입력은 넣지 않고, 작업대가 Empty가 될 때 비운다 */
+	FRecipe WorkbenchRecipe;
+
+	/** 월드 시간(초). 재료 한정 입력 무시가 끝나는 시각*/
+	double InputLockEndTime = 0.0;
+
 	FDayResult Result;
 
 	/** 월드 시간(초). 화면의 남은 시간 계산용 원본 시각 */
 	double DayEndTime = 0.0;
 
+private:
 	void PushEvent(double Time, EBusinessEventType Type, int32 CustomerId = 0);
+
+	/** 작업대를 Empty로 되돌리고 레시피를 비운다 */
+	void ClearWorkbench();
+
+	/** 작업대를 쓰레기로 바꾸고 쓰레기 수 +1 · TrashTime 동안 입력 잠금 · WorkbenchDone 예약을 함께 한다. */
+	void TrashWorkbench(double Now);
 };

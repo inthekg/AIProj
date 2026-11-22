@@ -18,8 +18,10 @@ EBusinessChange FBusinessSim::StartDay(const FBusinessDayInput& InInput, double 
 	NextCustomerId = 1;
 	EventHeap.Reset();
 	NextEventSeq = 0;
+	ClearWorkbench();
+	InputLockEndTime = 0.0;
 	Result = FDayResult();
-	
+
 	Result.Rent = Input.Balance.BaseRent;
 	for (const TPair<EIngredient, FIngredientRow>& Pair : Input.Ingredients)
 	{
@@ -35,6 +37,114 @@ EBusinessChange FBusinessSim::StartDay(const FBusinessDayInput& InInput, double 
 
 	return EBusinessChange::Customers | EBusinessChange::Workbench | EBusinessChange::Steamer
 		| EBusinessChange::Shelf | EBusinessChange::Gold;
+}
+
+EBusinessChange FBusinessSim::TapIngredient(EIngredient Ingredient, double Now)
+{
+	// 순서 중요: 해금 검사가 IsBaseIngredient보다 먼저다 
+	const FIngredientRow* Row = Input.Ingredients.Find(Ingredient);
+	if (Row == nullptr || IsDayOver() || Now < InputLockEndTime)
+	{
+		return EBusinessChange::None;
+	}
+
+	const EWorkbenchInput WorkbenchInput = IsBaseIngredient(Ingredient) ? EWorkbenchInput::Base : EWorkbenchInput::Fruit;
+	const EWorkbenchState NextState = NextWorkbenchState(WorkbenchState, WorkbenchInput);
+	
+	//입력 무시라면
+	if (NextState == WorkbenchState)
+	{
+		return EBusinessChange::None;
+	}
+
+	// 쓰레기가 되는 탭도 재료비를 낸다(architecture.md 3.6 전이표 메모)
+	Result.IngredientCost += Row->Cost;
+	switch (NextState)
+	{
+	case EWorkbenchState::Base:
+		WorkbenchState = NextState;
+		WorkbenchRecipe.Base = Ingredient;
+		InputLockEndTime = Now + Input.Balance.PlaceTime;
+		return EBusinessChange::Workbench | EBusinessChange::Gold;
+	case EWorkbenchState::BaseFruit:
+		WorkbenchState = NextState;
+		WorkbenchRecipe.Fruit = Ingredient;
+		InputLockEndTime = Now + Input.Balance.PlaceTime;
+		return EBusinessChange::Workbench | EBusinessChange::Gold;
+	case EWorkbenchState::Trash:
+		TrashWorkbench(Now);
+		return EBusinessChange::Workbench | EBusinessChange::Gold;
+	case EWorkbenchState::Empty:
+	case EWorkbenchState::Wrapping:
+		// 재료 입력으로는 갈 수 없는 상태다(전이표)
+		break;
+	}
+	checkNoEntry();
+	return EBusinessChange::None;
+}
+
+EBusinessChange FBusinessSim::TapDiscard(double Now)
+{
+	if (IsDayOver() || Now < InputLockEndTime)
+	{
+		return EBusinessChange::None;
+	}
+	if (NextWorkbenchState(WorkbenchState, EWorkbenchInput::Discard) == WorkbenchState)
+	{
+		return EBusinessChange::None;
+	}
+
+	// 재료비는 재료를 올릴 때 이미 냈다(GDD 버리기 버튼)
+	TrashWorkbench(Now);
+	return EBusinessChange::Workbench;
+}
+
+/* Empty->Base->Fruit(선택)->Steamer가 정상 루트*/
+EWorkbenchState FBusinessSim::NextWorkbenchState(EWorkbenchState Current, EWorkbenchInput WorkbenchInput)
+{
+	switch (Current)
+	{
+	case EWorkbenchState::Empty:
+		switch (WorkbenchInput)
+		{
+		case EWorkbenchInput::Base:
+			return EWorkbenchState::Base;
+		case EWorkbenchInput::Fruit:
+		case EWorkbenchInput::Steamer:
+			return EWorkbenchState::Trash;
+		case EWorkbenchInput::Discard:
+			return EWorkbenchState::Empty;
+		}
+		break;
+	case EWorkbenchState::Base:
+		switch (WorkbenchInput)
+		{
+		case EWorkbenchInput::Fruit:
+			return EWorkbenchState::BaseFruit;
+		case EWorkbenchInput::Steamer:
+			return EWorkbenchState::Wrapping;
+		case EWorkbenchInput::Base:
+		case EWorkbenchInput::Discard:
+			return EWorkbenchState::Trash;
+		}
+		break;
+	case EWorkbenchState::BaseFruit:
+		switch (WorkbenchInput)
+		{
+		case EWorkbenchInput::Steamer:
+			return EWorkbenchState::Wrapping;
+		case EWorkbenchInput::Base:
+		case EWorkbenchInput::Fruit:
+		case EWorkbenchInput::Discard:
+			return EWorkbenchState::Trash;
+		}
+		break;
+	case EWorkbenchState::Wrapping:
+	case EWorkbenchState::Trash:
+		return Current;
+	}
+	checkNoEntry();
+	return Current;
 }
 
 EBusinessChange FBusinessSim::ProcessDueEvents(double Now)
@@ -134,10 +244,16 @@ EBusinessChange FBusinessSim::ProcessDueEvents(double Now)
 			Changes |= EBusinessChange::Customers;
 			continue;
 		}
+		case EBusinessEventType::WorkbenchDone:
+			// TODO(T13): Wrapping이면 배분(손님 → 진열대 → 폐기, architecture.md 1.10 · 3.6)
+			ClearWorkbench();
+			Changes |= EBusinessChange::Workbench;
+			continue;
 		case EBusinessEventType::DayEnd:
-			// TODO(T11): 작업대 Empty · 레시피 비우기 (architecture.md 4.7 F1)
 			// TODO(T13): 진열 개수 · 작업대를 폐기 수에 더하고 진열대 비우기
 			WaitingCustomers.Reset();
+			// 작업대를 되돌리지 않으면 감싸기 연출이 다시 재생된다(architecture.md 4.7 F1)
+			ClearWorkbench();
 			EventHeap.Reset();
 			Changes |= EBusinessChange::Customers | EBusinessChange::Workbench | EBusinessChange::Steamer
 				| EBusinessChange::Shelf | EBusinessChange::Gold | EBusinessChange::DayEnded;
@@ -166,4 +282,19 @@ void FBusinessSim::PushEvent(double Time, EBusinessEventType Type, int32 Custome
 	Event.CustomerId = CustomerId;
 	EventHeap.HeapPush(Event);
 	++NextEventSeq;
+}
+
+void FBusinessSim::ClearWorkbench()
+{
+	WorkbenchState = EWorkbenchState::Empty;
+	WorkbenchRecipe = FRecipe();
+}
+
+void FBusinessSim::TrashWorkbench(double Now)
+{
+	WorkbenchState = EWorkbenchState::Trash;
+	// 쓰레기 수는 연출이 끝날 때가 아니라 판정 순간에 센다(architecture.md 3.6 전이표 메모)
+	++Result.TrashCount;
+	InputLockEndTime = Now + Input.Balance.TrashTime;
+	PushEvent(InputLockEndTime, EBusinessEventType::WorkbenchDone);
 }
