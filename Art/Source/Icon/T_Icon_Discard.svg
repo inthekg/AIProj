@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="112" height="112" viewBox="0 0 112 112">
+  <!-- 버리기: 휴지통 (버튼 176 위 아이콘 112). 짧은 변 112라 선은 .line-m (art-style.md 2장 · 3.3) -->
+  <path class="gray line-m" d="M 24 39.5 L 88 39.5 L 82.5 97 C 82 103, 79 105, 73.5 105 L 38.5 105 C 33 105, 30 103, 29.5 97 Z"/>
+  <path class="line-s" fill="none" d="M 44.5 55.5 L 45.5 90 M 56 55.5 L 56 90 M 67.5 55.5 L 66.5 90"/>
+  <rect class="gray line-m" x="42" y="12" width="28" height="16" rx="7"/>
+  <rect class="gray line-m" x="15" y="23.5" width="82" height="16" rx="8"/>
+</svg>

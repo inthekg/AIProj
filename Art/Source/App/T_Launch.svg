@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="432" height="960" viewBox="0 0 1296 2880">
+  <!-- 런치 화면 (UE Launch Portrait 칸). 432×960 dp 크기로 출력하고, 안쪽은 게임 화면 픽셀 단위(×3)로 그려 선 굵기가 게임과 같게 보이게 한다. 기기에서 dp 크기 그대로 가운데에 그려지고 넘치는 가장자리는 잘리므로 중요한 그림은 가운데 1080×1920(x 108–1188, y 480–2400) 안 (art-style.md 3.12, art_log.md D62 · D65) -->
+  <defs>
+    <pattern id="tile" patternUnits="userSpaceOnUse" x="0" y="1680" width="120" height="120">
+      <rect class="cream" x="4" y="4" width="112" height="112" rx="10"/>
+    </pattern>
+  </defs>
+  <rect class="sky" x="0" y="0" width="1296" height="1680"/>
+  <path class="white line-m" d="M 246.0 808.0 C 222.0 808.0, 222.0 772.0, 253.2 769.6 C 258.0 736.0, 306.0 728.8, 325.2 752.8 C 342.0 724.0, 397.2 731.2, 399.6 767.2 C 433.2 764.8, 438.0 808.0, 409.2 808.0 Z"/>
+  <path class="white line-m" d="M 916.0 988.0 C 892.0 988.0, 892.0 952.0, 923.2 949.6 C 928.0 916.0, 976.0 908.8, 995.2 932.8 C 1012.0 904.0, 1067.2 911.2, 1069.6 947.2 C 1103.2 944.8, 1108.0 988.0, 1079.2 988.0 Z"/>
+  <rect class="skin" x="0" y="1680" width="1296" height="1200"/>
+  <rect fill="url(#tile)" x="0" y="1680" width="1296" height="1200"/>
+  <path class="line-s" fill="none" d="M -12 1680 L 1308 1680"/>
+
+  <ellipse class="shade" cx="648" cy="1788" rx="290" ry="30"/>
+  <path class="white line" d="M 378 1660 C 378 1500, 500 1416, 648 1416 C 796 1416, 918 1500, 918 1660 C 918 1740, 820 1784, 648 1784 C 476 1784, 378 1740, 378 1660 Z"/>
+  <ellipse class="ink" cx="600" cy="1590" rx="12" ry="16"/>
+  <ellipse class="ink" cx="696" cy="1590" rx="12" ry="16"/>
+  <path class="line" fill="none" d="M 626 1626 Q 648 1644 670 1626"/>
+  <path class="red line" d="M 648 1470 C 588 1460, 562 1414, 562 1372 C 562 1330, 592 1308, 622 1320 L 648 1330 L 674 1320 C 704 1308, 734 1330, 734 1372 C 734 1414, 708 1460, 648 1470 Z"/>
+  <g class="cream"><ellipse cx="614" cy="1376" rx="7" ry="10"/><ellipse cx="682" cy="1376" rx="7" ry="10"/><ellipse cx="648" cy="1418" rx="7" ry="10"/></g>
+  <path class="green line" d="M 600 1322 Q 648 1280 696 1322 Q 672 1342 648 1334 Q 624 1342 600 1322 Z"/>
+</svg>

@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="300" height="104" viewBox="0 0 300 104">
+  <!-- "파산위기!" 표지판 바탕: 빨간 테두리 판 + 흰 글자 칸(x 17–283 · y 17–87). 글자는 UMG (art-pipeline.md D10) -->
+  <rect class="red line-m" x="3" y="3" width="294" height="98" rx="24"/>
+  <rect class="white line-s" x="17" y="17" width="266" height="70" rx="12"/>
+</svg>

@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 80 80">
+  <!-- "아무거나" 주문: 완성 모찌 모양 위에 물음표(그림). 말풍선 아이콘 칸 80 (art-style.md 2장) -->
+  <path class="white line-s" d="M 6.4 49.4 C 6.4 26.8, 22 14, 40 14 C 58 14, 73.6 26.8, 73.6 49.4 C 73.6 61, 62 66.8, 40 66.8 C 18 66.8, 6.4 61, 6.4 49.4 Z"/>
+  <path class="line-s" fill="none" d="M 32 35 C 32 26, 48 26, 48 35 C 48 41.5, 40 41.5, 40 48"/>
+  <circle class="ink" cx="40" cy="56" r="3"/>
+</svg>

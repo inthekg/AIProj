@@ -1,5 +1,11 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="480" height="44" viewBox="0 0 480 44">
-  <!-- 제작 메모 바탕: 점선 테두리 + 맨 앞 체크 표시(그림). 글자 "베이스 → 과일(선택) → 떡"은 UMG로 x 48부터 (art-style.md 2장, art-pipeline.md D10, art_log.md D41) -->
-  <rect class="white line-s" x="2" y="2" width="476" height="40" rx="14" stroke-dasharray="10 7"/>
-  <path class="line-s" fill="none" d="M 16 22 L 23 30 L 36 13"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="96" viewBox="0 0 600 96">
+  <!-- 제작 메모 바탕: 노란 포스트잇 3장(귀퉁이 접힘). 글자 "베이스 →" · "과일(선택) →" · "떡"은 UMG로 장마다 가운데, 둘째 장 글자는 −3도 회전 (art-style.md 2장 · 3.10, art_log.md D49) -->
+  <path class="yellow line-s" d="M 18 8 H 194 Q 198 8 198 12 V 72 L 182 88 H 18 Q 14 88 14 84 V 12 Q 14 8 18 8 Z"/>
+  <path class="yellow line-s" d="M 198 72 L 182 88 L 182 72 Z"/>
+  <g transform="rotate(-3 342 48)">
+    <path class="yellow line-s" d="M 224 8 H 460 Q 464 8 464 12 V 72 L 448 88 H 224 Q 220 88 220 84 V 12 Q 220 8 224 8 Z"/>
+    <path class="yellow line-s" d="M 464 72 L 448 88 L 448 72 Z"/>
+  </g>
+  <path class="yellow line-s" d="M 490 8 H 582 Q 586 8 586 12 V 72 L 570 88 H 490 Q 486 88 486 84 V 12 Q 486 8 490 8 Z"/>
+  <path class="yellow line-s" d="M 586 72 L 570 88 L 570 72 Z"/>
 </svg>

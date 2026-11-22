@@ -1,0 +1,4 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+  <!-- 공용 버튼 (영업 시작 · 버리기 · 다음 날로 · 처음부터 · 계속하기). 9-slice 원본: 모서리가 가장자리 32 안에 들어간다 (Margin은 art-style.md 2장) -->
+  <rect class="yellow line-m" x="3" y="3" width="122" height="122" rx="28"/>
+</svg>

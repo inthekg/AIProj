@@ -1,0 +1,12 @@
+{
+  "name": "aigame-art",
+  "private": true,
+  "description": "Art/Source SVG -> Art/Export PNG (docs/02_design/art-pipeline.md A01)",
+  "scripts": {
+    "build": "node art.mjs build",
+    "sheet": "node art.mjs sheet"
+  },
+  "dependencies": {
+    "sharp": "^0.35.5"
+  }
+}

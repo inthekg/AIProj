@@ -88,9 +88,9 @@
   <rect class="box" x="884" y="844" width="80" height="80" rx="10"/><circle class="on" cx="884" cy="940" r="8"/><circle class="on" cx="904" cy="940" r="8"/><circle class="on" cx="924" cy="940" r="8"/><circle class="on" cx="944" cy="940" r="8"/><circle class="off" cx="964" cy="940" r="8"/>
   <text class="s" x="92" y="770">제품 80</text>
 
-  <!-- 제작 메모: 진열대와 재료통 경계에 꽂음 -->
-  <rect class="box" x="300" y="994" width="480" height="44" rx="10"/>
-  <text class="t" x="540" y="1025">제작 메모 480×44</text>
+  <!-- 제작 메모: 포스트잇 3장, 진열대 아래쪽(2행 점 아래)부터 재료통 위까지 (art_log.md D49) -->
+  <rect class="box" x="240" y="952" width="600" height="96" rx="10"/>
+  <text class="t" x="540" y="1009">제작 메모 600×96 (포스트잇 3장)</text>
 
   <!-- 재료통 1행: 베이스 3 (1048–1224). 칸마다 재료통 그림(통 + 가득 찬 베이스) -->
   <rect class="tap" x="40" y="1048" width="320" height="176" rx="14"/>
@@ -113,24 +113,24 @@
   <text class="t" x="924" y="1336">망고</text>
   <text class="s" x="156" y="1368">232×176</text>
 
-  <!-- 작업대 1432–1872: 찜기(왼쪽, 작업대 위) · 재료 · 조합 · 버리기(오른쪽 끝) -->
+  <!-- 작업대 1432–1872: 찜기(왼쪽, 작업대 위) · 재료 · 조합 · 버리기(오른쪽 끝). 모두 상판(1436–1820) 세로 가운데 1628에 맞춘다 (art_log.md D50) -->
   <rect class="box" x="40" y="1432" width="1000" height="440" rx="24"/>
   <text class="l" x="64" y="1458">작업대 1000×440</text>
-  <rect class="tap" x="100" y="1524" width="264" height="224" rx="18"/>
-  <rect class="fx" x="100" y="1524" width="264" height="160"/>
-  <text class="s" x="232" y="1552">김 FX 264×160 (찌는 중)</text>
-  <text class="t" x="232" y="1728">찜기 264×224</text>
-  <rect class="box" x="100" y="1772" width="264" height="28" rx="14"/>
-  <text class="s" x="232" y="1793">게이지 264×28</text>
+  <rect class="tap" x="100" y="1490" width="264" height="224" rx="18"/>
+  <rect class="fx" x="100" y="1490" width="264" height="160"/>
+  <text class="s" x="232" y="1518">김 FX 264×160 (찌는 중)</text>
+  <text class="t" x="232" y="1694">찜기 264×224</text>
+  <rect class="box" x="100" y="1738" width="264" height="28" rx="14"/>
+  <text class="s" x="232" y="1759">게이지 264×28</text>
   <line class="guide" x1="540" y1="1440" x2="540" y2="1864"/>
   <text class="z" x="532" y="1858">화면 중심 540</text>
-  <rect class="sub" x="432" y="1492" width="320" height="320"/>
-  <text class="t" x="592" y="1646">재료 · 조합</text>
-  <text class="s" x="592" y="1676">320 · 중심 592</text>
-  <rect class="tap" x="840" y="1564" width="176" height="176" rx="20"/>
-  <rect class="box" x="872" y="1596" width="112" height="112"/>
-  <text class="s" x="928" y="1658">버리기</text>
-  <text class="s" x="928" y="1768">176 · 아이콘 112</text>
+  <rect class="sub" x="432" y="1468" width="320" height="320"/>
+  <text class="t" x="592" y="1622">재료 · 조합</text>
+  <text class="s" x="592" y="1652">320 · 중심 592</text>
+  <rect class="tap" x="840" y="1540" width="176" height="176" rx="20"/>
+  <rect class="box" x="872" y="1572" width="112" height="112"/>
+  <text class="s" x="928" y="1634">버리기</text>
+  <text class="s" x="928" y="1744">176 · 아이콘 112</text>
 
   <text class="z" x="1072" y="1904">▲ 조작 영역 (1040 아래, 46%) · 파란색 = 터치</text>
 </svg>

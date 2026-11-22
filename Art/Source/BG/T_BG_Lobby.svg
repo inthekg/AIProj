@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="2400" viewBox="0 0 1080 2400">
+  <!-- 로비 배경: 하늘(.sky) + 가게 앞모습(가게 그림 자리 y 160–720, 벽 .beige — art_log.md D58 · D59) + 보도 타일. 안쪽 좌표는 화면 좌표(1080×1920)로 쓰고 위아래 240씩 늘린다 (art-style.md 1.2 · 3.11) -->
+  <defs>
+    <pattern id="tile" patternUnits="userSpaceOnUse" x="0" y="690" width="120" height="120">
+      <rect class="cream" x="4" y="4" width="112" height="112" rx="10"/>
+    </pattern>
+  </defs>
+  <g transform="translate(0 240)">
+    <rect class="sky" x="0" y="-240" width="1080" height="930"/>
+    <path class="white line-m" d="M 260 -140 C 240 -140, 240 -170, 266 -172 C 270 -200, 310 -206, 326 -186 C 340 -210, 386 -204, 388 -174 C 416 -176, 420 -140, 396 -140 Z"/>
+    <path class="white line-m" d="M 720 -90 C 700 -90, 700 -120, 726 -122 C 730 -150, 770 -156, 786 -136 C 800 -160, 846 -154, 848 -124 C 876 -126, 880 -90, 856 -90 Z"/>
+    <path class="white line-m" d="M 80 240 C 60 240, 60 210, 86 208 C 90 180, 130 174, 146 194 C 160 170, 206 176, 208 206 C 236 204, 240 240, 216 240 Z"/>
+    <path class="white line-m" d="M 860 216 C 840 216, 840 186, 866 184 C 870 156, 910 150, 926 170 C 940 146, 986 152, 988 182 C 1016 180, 1020 216, 996 216 Z"/>
+
+    <rect class="skin" x="0" y="690" width="1080" height="1470"/>
+    <rect fill="url(#tile)" x="0" y="690" width="1080" height="1470"/>
+    <path class="line-s" fill="none" d="M -12 690 L 1092 690"/>
+
+    <rect class="wood line" x="380" y="200" width="320" height="104" rx="16"/>
+    <path class="white line-m" d="M 480 274 C 480 248, 506 236, 540 236 C 574 236, 600 248, 600 274 C 600 286, 580 292, 540 292 C 500 292, 480 286, 480 274 Z"/>
+    <path class="red line-s" d="M 540 252 C 524 249, 518 236, 518 225 C 518 214, 527 209, 535 212 L 540 214 L 545 212 C 553 209, 562 214, 562 225 C 562 236, 556 249, 540 252 Z"/>
+    <path class="green line-s" d="M 526 211 Q 540 201 554 211 Q 547 218 540 215 Q 533 218 526 211 Z"/>
+
+    <rect class="beige line" x="150" y="330" width="780" height="360"/>
+    <rect class="wood line" x="130" y="300" width="820" height="44" rx="8"/>
+    <path class="red line-s" d="M 150 344 H 210 V 396 A 30 30 0 0 1 150 396 Z"/>
+    <path class="white line-s" d="M 210 344 H 270 V 396 A 30 30 0 0 1 210 396 Z"/>
+    <path class="red line-s" d="M 270 344 H 330 V 396 A 30 30 0 0 1 270 396 Z"/>
+    <path class="white line-s" d="M 330 344 H 390 V 396 A 30 30 0 0 1 330 396 Z"/>
+    <path class="red line-s" d="M 390 344 H 450 V 396 A 30 30 0 0 1 390 396 Z"/>
+    <path class="white line-s" d="M 450 344 H 510 V 396 A 30 30 0 0 1 450 396 Z"/>
+    <path class="red line-s" d="M 510 344 H 570 V 396 A 30 30 0 0 1 510 396 Z"/>
+    <path class="white line-s" d="M 570 344 H 630 V 396 A 30 30 0 0 1 570 396 Z"/>
+    <path class="red line-s" d="M 630 344 H 690 V 396 A 30 30 0 0 1 630 396 Z"/>
+    <path class="white line-s" d="M 690 344 H 750 V 396 A 30 30 0 0 1 690 396 Z"/>
+    <path class="red line-s" d="M 750 344 H 810 V 396 A 30 30 0 0 1 750 396 Z"/>
+    <path class="white line-s" d="M 810 344 H 870 V 396 A 30 30 0 0 1 810 396 Z"/>
+    <path class="red line-s" d="M 870 344 H 930 V 396 A 30 30 0 0 1 870 396 Z"/>
+    <path class="line" fill="none" d="M 150 344 H 930 V 396 A 30 30 0 0 1 870 396 A 30 30 0 0 1 810 396 A 30 30 0 0 1 750 396 A 30 30 0 0 1 690 396 A 30 30 0 0 1 630 396 A 30 30 0 0 1 570 396 A 30 30 0 0 1 510 396 A 30 30 0 0 1 450 396 A 30 30 0 0 1 390 396 A 30 30 0 0 1 330 396 A 30 30 0 0 1 270 396 A 30 30 0 0 1 210 396 A 30 30 0 0 1 150 396 Z"/>
+
+    <rect class="wood line" x="200" y="456" width="220" height="168" rx="12"/>
+    <rect class="blue line-s" x="216" y="472" width="188" height="136" rx="6"/>
+    <rect class="wood line-s" x="304" y="472" width="12" height="136"/>
+    <rect class="wood line-s" x="216" y="534" width="188" height="12"/>
+    <rect class="wood line-m" x="192" y="624" width="236" height="30" rx="6"/>
+    <path class="green line-m" d="M 200 628 C 200 604, 236 600, 244 612 C 252 596, 290 596, 298 612 C 306 596, 344 596, 352 612 C 360 596, 398 596, 406 612 C 418 606, 428 616, 420 628 Z"/>
+    <g class="red line-s"><circle cx="232" cy="612" r="7"/><circle cx="290" cy="606" r="7"/><circle cx="348" cy="607" r="7"/><circle cx="398" cy="613" r="7"/></g>
+
+    <rect class="wood line" x="660" y="456" width="220" height="168" rx="12"/>
+    <rect class="blue line-s" x="676" y="472" width="188" height="136" rx="6"/>
+    <rect class="wood line-s" x="764" y="472" width="12" height="136"/>
+    <rect class="wood line-s" x="676" y="534" width="188" height="12"/>
+    <rect class="wood line-m" x="652" y="624" width="236" height="30" rx="6"/>
+    <path class="green line-m" d="M 660 628 C 660 604, 696 600, 704 612 C 712 596, 750 596, 758 612 C 766 596, 804 596, 812 612 C 820 596, 858 596, 866 612 C 878 606, 888 616, 880 628 Z"/>
+    <g class="red line-s"><circle cx="692" cy="612" r="7"/><circle cx="750" cy="606" r="7"/><circle cx="808" cy="607" r="7"/><circle cx="858" cy="613" r="7"/></g>
+
+    <rect class="wood line" x="476" y="456" width="128" height="234" rx="14"/>
+    <circle class="blue line-s" cx="540" cy="520" r="28"/>
+    <circle class="ink" cx="584" cy="590" r="7"/>
+  </g>
+</svg>

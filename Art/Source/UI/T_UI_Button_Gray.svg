@@ -1,0 +1,4 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+  <!-- 골드가 비용보다 적을 때의 로비 구매 버튼 (글자 "골드 부족"은 UMG). T_UI_Button과 같은 모양 · 9-slice Margin (art_log.md D48) -->
+  <rect class="gray line-m" x="3" y="3" width="122" height="122" rx="28"/>
+</svg>

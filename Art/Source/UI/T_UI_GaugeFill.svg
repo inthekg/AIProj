@@ -1,0 +1,4 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="48" height="16" viewBox="0 0 48 16">
+  <!-- 게이지 채움. T_UI_GaugeBG와 같은 크기로 겹쳐 바탕 외곽선 안쪽(x 4–44 · y 4–12)만 칠한다. 외곽선 없음 (art-style.md 2장) -->
+  <rect class="green" x="4" y="4" width="40" height="8" rx="4"/>
+</svg>

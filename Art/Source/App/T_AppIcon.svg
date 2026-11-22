@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 128 128">
+  <!-- 앱 아이콘 원본: 노란 바탕(불투명) + 얼굴 있는 흰 모찌 위 딸기(영업 벽 포스터와 같은 그림). 작은 칸(36~96)에서도 선이 보이게 viewBox 128 단위로 그린다. 핵심 그림은 가운데 2/3 안 (art-pipeline.md 3.1, art-style.md 3.12, art_log.md D64) -->
+  <rect class="yellow" x="0" y="0" width="128" height="128"/>
+  <ellipse class="shade" cx="64" cy="101" rx="36" ry="5"/>
+  <path class="white line-m" d="M 28 84 C 28 62, 44 50, 64 50 C 84 50, 100 62, 100 84 C 100 95, 86 100, 64 100 C 42 100, 28 95, 28 84 Z"/>
+  <ellipse class="ink" cx="55" cy="76" rx="2.5" ry="3.5"/>
+  <ellipse class="ink" cx="73" cy="76" rx="2.5" ry="3.5"/>
+  <path class="line-s" fill="none" d="M 60 84 Q 64 88 68 84"/>
+  <path class="red line-m" d="M 64 62 C 52 60, 47 51, 47 43 C 47 35, 53 31, 59 33 L 64 35 L 69 33 C 75 31, 81 35, 81 43 C 81 51, 76 60, 64 62 Z"/>
+  <path class="green line-s" d="M 54 34 Q 64 26 74 34 Q 69 39 64 37 Q 59 39 54 34 Z"/>
+</svg>

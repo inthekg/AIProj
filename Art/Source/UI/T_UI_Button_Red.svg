@@ -1,0 +1,4 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+  <!-- 구매 버튼 (로비 해금 · 업그레이드). T_UI_Button과 같은 모양 · 9-slice Margin, 색만 다르다 (art_log.md D47) -->
+  <rect class="red line-m" x="3" y="3" width="122" height="122" rx="28"/>
+</svg>

@@ -1,5 +1,6 @@
 # 아트 제작 계획 — 이미지 목록 · 생성 방법 · 태스크
 
+> 2026-11-22 · v1.2 — A08~A10 결과 반영: 이미지 57장(로비 구매 버튼 빨강 · 회색, art_log.md D47 · D48), 아이콘 실제 크기, 앱 아이콘 UE 5칸 · 런치 432×960(D61 · D62), 배경 · 런치 전용 2색(D58 · D59), 7장 아이콘 칸 확인됨.
 > 2026-11-22 · v1.1 — 태스크 ID를 A00~A12로 변경(tasks.md의 T01~T20과 구분), D12~D14 판정, 기록 위치 docs/ai-log/art_log.md (D15 · D16).
 > 2026-11-22 · v1.0 — 확정. 근거: Claude 채팅 프로젝트의 프롬프트 점검 → 1단계(이미지 목록) · 2단계(생성 방법) · 3단계(규격) 결정.
 > 관련: GDD v1.4, ADR-0010(작업대 조합 이미지 보완), ADR-0014(이미지 참조는 BP 기본값), ADR-0002(UTF-8)
@@ -32,9 +33,9 @@
 
 - D15부터는 docs/ai-log/art_log.md의 결정 표에 적는다.
 
-## 2. 이미지 목록 (55장)
-- `*` 표시 크기는 A02에서 확정해 docs/02_design/art-style.md 2장에 적었다(T_Illust_GameOver는 A10에서 확정).
-- D5의 51장에서 T_UI_StockBadge를 뺐다(진열 개수는 UMG 점, art_log.md D17). 재료통 칸 틀 T_UI_BinBase · T_UI_BinFruit 2장을 재료통 그림 T_Bin_* 7장으로 바꿨다(D28).
+## 2. 이미지 목록 (57장)
+- `*` 표시 크기는 A02에서 확정해 docs/02_design/art-style.md 2장에 적었다(T_Illust_GameOver는 A10에서 480×360으로 확정).
+- D5의 51장에서 T_UI_StockBadge를 뺐다(진열 개수는 UMG 점, art_log.md D17). 재료통 칸 틀 T_UI_BinBase · T_UI_BinFruit 2장을 재료통 그림 T_Bin_* 7장으로 바꿨다(D28). 로비 구매 버튼 빨강 · 회색 2장을 더했다(D47 · D48).
 - 재료 이름은 코드의 `EIngredient` enum 이름을 쓴다: RedBean, Yogurt, DubaiChoco, Strawberry, Blueberry, Pineapple, Mango
 
 | # | 파일명 | 내용 · 용도 | 출력 크기 | 태스크 |
@@ -54,24 +55,26 @@
 | 39 | T_Mochi_Done | 완성 모찌 1종 (작업대 완성 연출 전용) | 320×320 | A05 |
 | 40 | T_Trash_Mosaic | 쓰레기 모자이크 (GDD 쓰레기 연출) | 320×320 | A05 |
 | 41 | T_UI_Panel | 팝업 패널 (결산 · 게임오버 · 로비 카드 공용, 9-slice) | 작은 원본* | A08 |
-| 42 | T_UI_Button | 공용 버튼 (영업 시작 · 해금 · 업그레이드 · 다음 날로 · 처음부터 · 계속하기, 9-slice) | 작은 원본* | A08 |
-| 43 | T_UI_GaugeBG | 게이지 바탕 (인내심 · 찜기 공용, 9-slice) | 작은 원본* | A08 |
-| 44 | T_UI_GaugeFill | 게이지 채움 (9-slice) | 작은 원본* | A08 |
-| 45 | T_UI_Bubble | 손님 머리 위 말풍선 (내용이 아이콘 2개로 고정이라 고정 크기) | 배치 크기* | A08 |
-| 46 | T_UI_Sign_Bankrupt | "파산위기!" 표지판 바탕 (글자는 UMG) | 배치 크기* | A08 |
-| 47 | T_UI_RecipeMemo | 레시피 메모판 (글자는 UMG) | 배치 크기* | A08 |
-| 48 | T_Icon_Any | "아무거나" 주문 아이콘 | 96×96* | A08 |
-| 49 | T_Icon_Discard | 버리기 버튼 아이콘 | 96×96* | A08 |
-| 50 | T_Icon_Pause | 일시정지 아이콘 | 96×96* | A08 |
-| 51 | T_Icon_Coin | 골드 · 매출 옆 코인 | 96×96* | A08 |
-| 52 | T_Icon_Clock | 남은 시간 옆 시계 | 96×96* | A08 |
-| 53 | T_Illust_GameOver | 파산 팝업 일러스트 (글자는 UMG) | 배치 크기* | A10 |
-| 54 | T_AppIcon | 앱 아이콘 원본 → UE 아이콘 칸별 크기로 출력 | 1024×1024 | A10 |
-| 55 | T_Launch | 런치(스플래시) 화면 | 1080×1920 | A10 |
+| 42 | T_UI_Button | 공용 버튼 노랑 (영업 시작 · 버리기 · 다음 날로 · 처음부터 · 계속하기, 9-slice) | 작은 원본* | A08 |
+| 43 | T_UI_Button_Red | 로비 구매 버튼 빨강 (해금 · 업그레이드, 9-slice) | 작은 원본* | A08 |
+| 44 | T_UI_Button_Gray | 로비 구매 버튼 회색 (골드 부족, 9-slice) | 작은 원본* | A08 |
+| 45 | T_UI_GaugeBG | 게이지 바탕 (인내심 · 찜기 공용, 9-slice) | 작은 원본* | A08 |
+| 46 | T_UI_GaugeFill | 게이지 채움 (9-slice) | 작은 원본* | A08 |
+| 47 | T_UI_Bubble | 손님 머리 위 말풍선 (내용이 아이콘 2개로 고정이라 고정 크기) | 배치 크기* | A08 |
+| 48 | T_UI_Sign_Bankrupt | "파산위기!" 표지판 바탕 (글자는 UMG) | 배치 크기* | A08 |
+| 49 | T_UI_RecipeMemo | 레시피 메모판: 포스트잇 3장 (글자는 UMG) | 배치 크기* | A08 |
+| 50 | T_Icon_Any | "아무거나" 주문 아이콘 | 80×80* | A08 |
+| 51 | T_Icon_Discard | 버리기 버튼 아이콘 | 112×112* | A08 |
+| 52 | T_Icon_Pause | 일시정지 아이콘 | 96×96* | A08 |
+| 53 | T_Icon_Coin | 골드 · 매출 옆 코인 | 64×64* | A08 |
+| 54 | T_Icon_Clock | 남은 시간 옆 시계 | 64×64* | A08 |
+| 55 | T_Illust_GameOver | 파산 팝업 일러스트 (글자는 UMG) | 480×360* | A10 |
+| 56 | T_AppIcon | 앱 아이콘 원본 → UE Android 아이콘 5칸 크기로 출력(아래 추가 출력) | 1024×1024 | A10 |
+| 57 | T_Launch | 런치(스플래시) 화면, UE Launch Portrait 칸 (dp 크기로 표시, 3.1) | 432×960* | A10 |
 
 추가 출력 (새 그림이 아님, 같은 SVG에서 크기만 바꿔 출력)
 - T_Ing_*_S 7장: 진열 제품 겹침 · 말풍선용 소형 재료 아이콘 80×80 (art-style.md 2장)
-- T_AppIcon 해상도별 세트
+- T_AppIcon_36 · _48 · _72 · _96 4장: UE Android 아이콘 칸 크기 — Icon · MDPI 48, LDPI 36, HDPI 72, XHDPI 96 (art_log.md D61)
 
 이미지가 필요 없는 것: 일시정지 오버레이의 어두운 막(UMG 색), 진열 개수 점(UMG RoundedBox, art_log.md D17), 타이틀 화면(화면 수 상한 4개), 숫자 · 한글 문구(UMG 텍스트)
 
@@ -87,10 +90,11 @@
   - 손님 5명: 같은 캔버스, 발 위치와 머리 높이 통일
 - 축소는 2배 이내. UI 텍스처는 밉맵이 없어서 2배 넘게 줄이면 가장자리가 거칠어진다. 더 작게 쓰는 곳은 소형 사본을 따로 출력한다.
 - 터치 영역(재료통 · 찜기 · 버리기 · 버튼): Android 권장 최소 48dp. 1080 폭 기기에서 대략 144px(기기마다 다름).
-- 앱 아이콘: 핵심 그림은 가운데 약 2/3 안. 적응형 아이콘은 108dp 캔버스 중 가운데 72dp가 보인다.
+- 앱 아이콘: 핵심 그림은 가운데 약 2/3 안. 적응형 아이콘은 108dp 캔버스 중 가운데 72dp가 보인다. UE 5.5 에디터에는 적응형 아이콘 칸이 없어 일반 아이콘 5칸(36 · 48 · 72 · 96)만 쓴다(`AndroidTargetSettingsCustomization.cpp`, art_log.md D61).
+- 런치 화면: UE는 런치 이미지를 res/drawable(mdpi)에 넣고 기기에서 dp 크기 그대로 가운데에 그린다(늘리지 않음, 남는 곳은 검정 — 엔진 `Build/Android/Java/res/drawable/splashscreen_p.xml`). 그래서 1080×1920이 아니라 432×960으로 출력해 화면을 덮고 넘치는 가장자리는 잘리게 하며, 중요한 그림은 가운데 360×640 안에 둔다(art_log.md D62).
 
 ### 3.2 파일
-- PNG, sRGB, 투명 배경(배경 2장과 런치 화면은 불투명)
+- PNG, sRGB, 투명 배경(배경 2장 · 런치 화면 · 앱 아이콘은 불투명)
 - 이미지 안에 글자 없음(D10)
 - 이름: `T_<분류>_<이름>` (2장 표 그대로)
 - 레포 폴더
@@ -106,14 +110,14 @@
 - 여러 장은 Property Matrix로 한 번에 바꾼다(에셋 여러 개 선택 → 우클릭 → Asset Actions → Bulk Edit via Property Matrix).
 - 9-slice(패널 · 버튼 · 게이지): 이미지 브러시 Draw As = Box, Margin(0~1 비율). 권장 값은 A08에서 art-style.md에 적는다.
 - 메모리: 비압축이라 1080×2400 배경 1장이 약 10MB. 로비 · 영업은 레벨이 달라 한 번에 1장만 올라가므로 허용. 실기기에서 문제가 되면 배경만 기본 압축으로 바꾸는 것을 검토한다(확인 필요).
-- 앱 아이콘: Project Settings > Platforms > Android > Icons
-- 런치 화면: Project Settings > Platforms > Android > Launch Images
+- 앱 아이콘: Project Settings > Platforms > Android > Icons — Icon · MDPI Icon: T_AppIcon_48, LDPI Icon: T_AppIcon_36, HDPI Icon: T_AppIcon_72, XHDPI Icon: T_AppIcon_96
+- 런치 화면: Project Settings > Platforms > Android > Launch Images — Show launch image 켬, Launch Portrait: T_Launch
 
 ## 4. 컨셉 유지 규칙
 구체 수치는 docs/02_design/art-style.md 3장(A03 확정, art_log.md D24 · D27).
 - 분위기: 부드럽고 편안하고 따뜻한 파스텔 플랫 그림, 아주 단순한 캐릭터 그림체
 - 생성 지시와 문서에 특정 게임 이름을 쓰지 않는다. 특징으로만 쓴다(굵은 외곽선, 적은 색 수, 평평한 색).
-- 팔레트 13색 파스텔(hex 코드), 따뜻한 크림 바탕
+- 팔레트 13색 파스텔(hex 코드). 배경 · 런치 화면만 전용 2색(`.beige` 가게 벽 · `.sky` 하늘, art_log.md D58 · D59)을 더 쓴다
 - 외곽선: 부드러운 갈색(순검정 금지), 굵기는 캔버스 크기 등급별
 - 명암: 물체 안쪽 명암 · 하이라이트 없음(평평한 색). 혼자 놓이는 물체의 바닥 그림자만
 - 모서리는 둥글게. 얼굴은 점 눈 + 작은 입(볼터치 · 코 · 귀 없음), 큰 둥근 머리
@@ -133,9 +137,9 @@
 | A05 | 작업대 상태: 조합 12 · 떡 · 완성 모찌 · 모자이크 | AI | A04 | 1.0h | 완료 |
 | A06 | 손님 5명 | AI | A03 | 1.0h | 완료 |
 | A07 | 가게 오브젝트: 진열대 · 작업대 · 찜기 · 김 | AI | A02 · A03 | 0.6h | 완료 |
-| A08 | UI 키트 7장 + 아이콘 5장 | AI | A03 | 1.0h | 대기 (T_UI_RecipeMemo만 먼저 완료) |
-| A09 | 배경 2장 (+ 전체 화면 합성 확인) | AI | A07 · A08 | 1.0h | 대기 |
-| A10 | 게임오버 일러스트 · 앱 아이콘 · 런치 화면 | AI | A03 | 0.5h | 대기 |
+| A08 | UI 키트 9장 + 아이콘 5장 | AI | A03 | 1.0h | 완료 |
+| A09 | 배경 2장 (+ 전체 화면 합성 확인) | AI | A07 · A08 | 1.0h | 완료 |
+| A10 | 게임오버 일러스트 · 앱 아이콘 · 런치 화면 | AI | A03 | 0.5h | 완료 |
 | A11 | UE 임포트 · 설정 · 실기기 확인 | 사람 | A04~A10 | 1.5h | 대기 |
 | A12 | 기록 정리 | 사람 (AI는 형식만) | A11 | 0.3h | 대기 |
 | | 합계 (추정) | | | 10.9h | |
@@ -210,7 +214,7 @@
 - 완료 조건: 사용자 승인
 
 ### A08. UI 키트 + 아이콘 (AI)
-- 패널 · 버튼 · 게이지 2장(9-slice용: 늘려도 모서리 모양이 유지되도록 테두리 여백을 둔다), 말풍선(고정 크기), 표지판 바탕, 메모판, 아이콘 5장
+- 패널 · 버튼 3색 · 게이지 2장(9-slice용: 늘려도 모서리 모양이 유지되도록 테두리 여백을 둔다), 말풍선(고정 크기), 표지판 바탕, 메모판, 아이콘 5장
 - 글자는 넣지 않는다. 9-slice 이미지의 권장 Margin 값을 art-style.md에 적는다.
 - 늘렸을 때 모양은 A11에서 UE로 확인한다.
 - 확인: 모아 보기
@@ -223,8 +227,8 @@
 
 ### A10. 게임오버 일러스트 · 앱 아이콘 · 런치 화면 (AI)
 - 게임오버 일러스트(글자 없음)
-- 앱 아이콘 원본 1024×1024(핵심 그림은 가운데 2/3) → UE 아이콘 칸별 크기로 출력. 칸별 크기는 사용자가 UE 5.5 Project Settings > Platforms > Android > Icons에서 확인해 알려 준다.
-- 런치 화면 1080×1920
+- 앱 아이콘 원본 1024×1024(핵심 그림은 가운데 2/3) → UE 아이콘 칸별 크기로 출력. 칸별 크기는 엔진 소스에서 찾은 5칸(36 · 48 · 72 · 96)을 사용자가 UE 5.5 Project Settings > Platforms > Android > Icons와 같다고 확인했다(art_log.md D61).
+- 런치 화면 432×960 (3.1, art_log.md D62)
 - 완료 조건: 사용자 승인
 
 ### A11. UE 임포트 · 설정 · 실기기 확인 (사람)
@@ -256,7 +260,8 @@
 ## 7. 확인 필요
 - ~~sharp의 Windows SVG 변환 동작 → A01~~ 확인됨 (sharp 0.35.5 · librsvg 2.63.2, CSS var()는 미지원)
 - ~~손님 캔버스 200×280 등 잠정 크기 → A02~~ 확인됨 (art-style.md 2장)
-- UE 5.5 Android 아이콘 칸별 크기 → A10
+- ~~UE 5.5 Android 아이콘 칸별 크기 → A10~~ 확인됨 (Icon 48 · LDPI 36 · MDPI 48 · HDPI 72 · XHDPI 96, 적응형 아이콘 칸 없음 — `AndroidTargetSettingsCustomization.cpp`, 사용자 확인)
+- 고밀도 기기에서 앱 아이콘(최대 96) · 런치 화면(mdpi 크기)이 늘어나 흐린지, 런처가 적응형이 아닌 아이콘을 모양 안에 줄여 넣는지 → A11
 - 비압축 배경의 실기기 메모리 · APK 크기 영향 → A11
 
 ## 8. Claude Code 시작 문구

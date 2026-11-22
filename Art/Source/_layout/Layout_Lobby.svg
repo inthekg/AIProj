@@ -31,37 +31,39 @@
   <rect class="bg" x="40" y="160" width="1000" height="560" rx="12"/>
   <text class="t" x="540" y="430">가게 그림 = 배경 (A09) · 비워 둠</text>
 
-  <!-- 카드 1: 다음 해금 -->
+  <!-- 카드 1: 다음 해금. 그림 · 글자 묶음 · 버튼을 카드 세로 가운데(930)에 맞추고, 글자는 이름 → 임대료 → 비용(맨 아래) (art_log.md D51) -->
   <rect class="panel" x="40" y="740" width="1000" height="380" rx="24"/>
-  <text class="l" x="64" y="776">다음 해금 카드 · 패널 1000×380 (9-slice)</text>
+  <text class="l" x="64" y="770">다음 해금 카드 · 패널 1000×380 (9-slice)</text>
   <rect class="box" x="72" y="802" width="256" height="256"/>
   <text class="t" x="200" y="924">재료 256</text>
   <text class="s" x="200" y="954">(원본 크기)</text>
-  <rect class="sub" x="360" y="796" width="400" height="64"/>
-  <text class="t" x="560" y="837">재료 이름</text>
-  <rect class="sub" x="360" y="876" width="320" height="52"/>
-  <text class="s" x="520" y="909">비용 (코인 + 숫자)</text>
-  <rect class="sub" x="360" y="940" width="320" height="52"/>
-  <text class="s" x="520" y="973">임대료 +N</text>
-  <rect class="tap" x="720" y="952" width="280" height="144" rx="24"/>
-  <text class="t" x="860" y="1020">해금</text>
-  <text class="s" x="860" y="1050">버튼 280×144</text>
+  <rect class="sub" x="360" y="828" width="320" height="64"/>
+  <text class="t" x="520" y="869">재료 이름</text>
+  <rect class="sub" x="360" y="904" width="320" height="52"/>
+  <text class="s" x="520" y="937">임대료 +N</text>
+  <rect class="sub" x="360" y="968" width="320" height="64"/>
+  <text class="s" x="520" y="1007">비용 (코인 64 + 숫자)</text>
+  <rect class="tap" x="720" y="858" width="280" height="144" rx="24"/>
+  <text class="t" x="860" y="926">해금</text>
+  <text class="s" x="860" y="956">빨간 버튼 280×144</text>
+  <text class="s" x="860" y="982">(골드 부족: 회색)</text>
 
-  <!-- 카드 2: 찜기 업그레이드 -->
+  <!-- 카드 2: 찜기 업그레이드. 카드 세로 가운데(1334)에 맞추고(찜기는 캔버스 위쪽이 비어 있어 그림이 보이는 부분 기준으로 16 올림), 글자는 Lv → 최대 개수 · 찌는 시간 → 비용(맨 아래) (art_log.md D51) -->
   <rect class="panel" x="40" y="1144" width="1000" height="380" rx="24"/>
-  <text class="l" x="64" y="1180">찜기 업그레이드 카드 · 패널 1000×380</text>
-  <rect class="box" x="72" y="1228" width="256" height="216"/>
-  <text class="t" x="200" y="1330">찜기 256×216</text>
-  <text class="s" x="200" y="1360">(264×224를 0.97배 표시)</text>
-  <rect class="sub" x="360" y="1200" width="400" height="64"/>
-  <text class="t" x="560" y="1241">Lv → Lv+1</text>
-  <rect class="sub" x="360" y="1280" width="320" height="52"/>
-  <text class="s" x="520" y="1313">최대 개수 · 찌는 시간</text>
-  <rect class="sub" x="360" y="1344" width="320" height="52"/>
-  <text class="s" x="520" y="1377">비용 (코인 + 숫자)</text>
-  <rect class="tap" x="720" y="1356" width="280" height="144" rx="24"/>
-  <text class="t" x="860" y="1424">업그레이드</text>
-  <text class="s" x="860" y="1454">버튼 280×144</text>
+  <text class="l" x="64" y="1174">찜기 업그레이드 카드 · 패널 1000×380</text>
+  <rect class="box" x="72" y="1210" width="256" height="216"/>
+  <text class="t" x="200" y="1312">찜기 256×216</text>
+  <text class="s" x="200" y="1342">(264×224를 0.97배 표시)</text>
+  <rect class="sub" x="360" y="1232" width="320" height="64"/>
+  <text class="t" x="520" y="1273">Lv → Lv+1</text>
+  <rect class="sub" x="360" y="1308" width="320" height="52"/>
+  <text class="s" x="520" y="1341">최대 개수 · 찌는 시간</text>
+  <rect class="sub" x="360" y="1372" width="320" height="64"/>
+  <text class="s" x="520" y="1411">비용 (코인 64 + 숫자)</text>
+  <rect class="tap" x="720" y="1262" width="280" height="144" rx="24"/>
+  <text class="t" x="860" y="1330">업그레이드</text>
+  <text class="s" x="860" y="1360">빨간 버튼 280×144</text>
+  <text class="s" x="860" y="1386">(골드 부족: 회색)</text>
 
   <!-- 영업 시작 -->
   <rect class="tap" x="180" y="1640" width="720" height="176" rx="32"/>

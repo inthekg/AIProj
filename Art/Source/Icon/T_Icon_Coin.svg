@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <!-- 코인 (골드 · 매출 옆): 앞면 + 아래로 보이는 두께 + 앞면의 C. C는 글꼴이 아니라 선 그림 (art_log.md D46) -->
+  <circle class="yellow line-s" cx="32" cy="35" r="26"/>
+  <circle class="yellow line-s" cx="32" cy="29" r="26"/>
+  <path class="line-s" fill="none" d="M 40.5 20.5 A 12 12 0 1 0 40.5 37.5"/>
+</svg>

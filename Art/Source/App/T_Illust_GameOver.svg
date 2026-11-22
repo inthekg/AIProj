@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="480" height="360" viewBox="0 0 480 360">
+  <!-- 게임 오버(파산) 팝업 일러스트: 우는 모찌(딸기가 미끄러짐) + 날개 달고 날아가는 코인 2개. 글자는 UMG (art-style.md 3.12, art_log.md D63) -->
+  <path class="white line-m" d="M 60 104 C 40 82, 24 88, 22 100 C 30 110, 44 112, 58 112 Z"/>
+  <path class="white line-m" d="M 132 92 C 152 70, 168 76, 170 88 C 162 98, 148 100, 134 100 Z"/>
+  <circle class="yellow line" cx="96" cy="98" r="30"/>
+  <path class="line-m" fill="none" d="M 104.5 88.5 A 13 13 0 1 0 104.5 107.5"/>
+  <path class="white line-m" d="M 348 68 C 328 46, 312 52, 310 64 C 318 74, 332 76, 346 76 Z"/>
+  <path class="white line-m" d="M 420 56 C 440 34, 456 40, 458 52 C 450 62, 436 64, 422 64 Z"/>
+  <circle class="yellow line" cx="384" cy="62" r="30"/>
+  <path class="line-m" fill="none" d="M 392.5 52.5 A 13 13 0 1 0 392.5 71.5"/>
+
+  <ellipse class="shade" cx="240" cy="322" rx="100" ry="12"/>
+  <path class="white line" d="M 148 278 C 148 218, 190 184, 240 184 C 290 184, 332 218, 332 278 C 332 306, 300 320, 240 320 C 180 320, 148 306, 148 278 Z"/>
+  <path class="line-m" fill="none" d="M 204 254 Q 214 244 224 254 M 256 254 Q 266 244 276 254"/>
+  <path class="blue line-s" d="M 210 262 C 202 274, 202 284, 210 284 C 218 284, 218 274, 210 262 Z"/>
+  <path class="blue line-s" d="M 270 262 C 262 274, 262 284, 270 284 C 278 284, 278 274, 270 262 Z"/>
+  <path class="line-m" fill="none" d="M 228 298 Q 240 288 252 298"/>
+  <g transform="rotate(24 262 176)">
+    <path class="red line-m" d="M 262 206 C 240 202, 232 186, 232 172 C 232 158, 242 150, 252 154 L 262 158 L 272 154 C 282 150, 292 158, 292 172 C 292 186, 284 202, 262 206 Z"/>
+    <g class="cream"><ellipse cx="250" cy="172" rx="3" ry="4"/><ellipse cx="274" cy="172" rx="3" ry="4"/><ellipse cx="262" cy="188" rx="3" ry="4"/></g>
+    <path class="green line-m" d="M 244 154 Q 262 138 280 154 Q 271 162 262 159 Q 253 162 244 154 Z"/>
+  </g>
+</svg>

@@ -967,7 +967,7 @@ private:
 ### 3.8 UI 계약 (사람 작업 M5)
 | 화면 · 영역 | 읽기 | 구독 | 호출 |
 |---|---|---|---|
-| 로비 | GI `GetProgress`(Day · Gold, Gold < 0 → "파산위기!"), `GetNextUnlock`(false → 모든 재료 해금 표시, OutRow.RentIncrease > 0이면 "임대료 +N" 표시), `GetNextSteamerLevel` | GI `OnProgressChanged` | GI `TryUnlockNext` · `TryUpgradeSteamer`, 엔진 `Open Level`(L_Business) |
+| 로비 | GI `GetProgress`(Day · Gold, Gold < 0 → "파산위기!"), `GetNextUnlock`(false → 모든 재료 해금 표시, OutRow.RentIncrease > 0이면 "임대료 +N" 표시), `GetNextSteamerLevel`. Gold < 그 행의 비용(`UnlockCost` · `UpgradeCost`)이면 그 구매 버튼을 회색 이미지로 바꾸고 글자를 "골드 부족"으로(GDD 화면 구성, art_log.md D48) | GI `OnProgressChanged` | GI `TryUnlockNext` · `TryUpgradeSteamer`, 엔진 `Open Level`(L_Business) |
 | 영업 상단 | GM `GetDayEndTime` − `Get Game Time in Seconds`, `GetDayResult`.Sales, `GetCurrentGold` | GM `OnGoldChanged` | 일시정지 버튼: 엔진 `Set Game Paused`(true) + 오버레이 |
 | 손님 줄 (슬롯 5) | GM `GetWaitingCustomers`, `GetPatience`, BP_BusinessGameMode `CustomerLookImages`, BP_ShopGameInstance 재료 이미지 | GM `OnCustomersChanged` | — |
 | 진열대 (2 × 8) | GM `GetShelf`, GI `GetBalance`(MaxStockPerRecipe — 점 수), 재료 이미지 | GM `OnShelfChanged` | — |

@@ -68,3 +68,11 @@
 .gray {
   fill: #D6D0CC;
 }
+
+/* 배경 · 런치 화면 전용 2색 (사용자 요청, 팔레트 13색 밖의 예외 — art_log.md D58 · D59) */
+.beige {
+  fill: #F3E7D7;
+}
+.sky {
+  fill: #D4E8F4;
+}

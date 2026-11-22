@@ -281,4 +281,4 @@ docs/02_design/adr/
 # 학습용 스킬과 학습 문서는 Git에서 제외
 /STUDY/
 .claude/skills/study/
-Scripts/art/node_modules/
+docs/ai-log/art_log.md
