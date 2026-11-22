@@ -28,7 +28,8 @@ void ABusinessGameMode::BeginPlay()
 
 	// 내려갈 때 · 돌아올 때 각각 두 델리게이트가 연달아 오므로 한 쌍만 구독한다
 	// 둘 다 영업 중일 때만 처리한다
-	// TODO(T06): 실기기에서 게임 스레드 호출과, 복귀 첫 프레임의 DeltaTime이 월드 시간에 더해지지 않는지 확인(architecture.md 3.7 · 4.7)
+	// 두 델리게이트는 게임 스레드에서 실행된다(AndroidEventManager.cpp FAppEventManager::Tick의 check(IsInGameThread()), 실기기 logcat TID로 확인)
+	// TODO(T19): 복귀 첫 프레임의 DeltaTime이 월드 시간에 더해지지 않는지 실기기 확인(architecture.md 4.7) — "계속하기" 오버레이가 있어야 일시정지를 풀 수 있다
 	FCoreDelegates::ApplicationWillEnterBackgroundDelegate.AddWeakLambda(this, [this]()
 	{
 		UE_LOG(LogAIGame, Log, TEXT("Entering background. DayOver=%s"), Sim.IsDayOver() ? TEXT("true") : TEXT("false"));

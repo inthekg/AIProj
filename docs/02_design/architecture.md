@@ -966,7 +966,7 @@ private:
 - `BeginPlay` 순서 중요: `Super::BeginPlay()`가 BP BeginPlay(위젯 생성 · 델리게이트 구독)를 먼저 실행해야, 이어지는 `StartDay` 뒤의 첫 알림을 위젯이 받는다.
 - 타이머: `GetWorldTimerManager().SetTimer(SimTimerHandle, FTimerDelegate::CreateUObject(this, &ABusinessGameMode::HandleChanges, EBusinessChange::None), Delay, false)`. 콜백 전용 멤버 함수를 따로 두지 않는다.
 - 백그라운드: `ApplicationWillEnterBackgroundDelegate.AddWeakLambda(this, …)`에서 `UGameplayStatics::SetGamePaused(this, true)`. 복귀: `ApplicationHasEnteredForegroundDelegate.AddWeakLambda(this, …)`에서 `OnResumeRequired.Broadcast()`. 둘 다 영업 중(`!Sim.IsDayOver()`)일 때만 한다 — 결산 · 게임 오버 팝업 위에 "계속하기"가 뜨지 않게(4.7 F2). EndPlay에서 `RemoveAll(this)`.
-- Android 생명주기 델리게이트는 `FAppEventManager` 큐를 거쳐 게임 스레드에서 처리된다(`Runtime/Launch/Private/Android/AndroidEventManager.cpp` 72행 `check(IsInGameThread())`, LaunchAndroid.cpp 1511행 `EnqueueAppEvent`). 실기기에서 다시 확인한다.
+- Android 생명주기 델리게이트는 `FAppEventManager` 큐를 거쳐 게임 스레드에서 처리된다(`Runtime/Launch/Private/Android/AndroidEventManager.cpp` 72행 `check(IsInGameThread())`, LaunchAndroid.cpp 1511행 `EnqueueAppEvent`). 실기기 확인(T06, 2026-11-23): 백그라운드 콜백 · `Entering background` 로그가 `Init`(`Data validation passed`) · 타이머 콜백(`Customers changed`)과 같은 TID에서, 이벤트 스레드(`SuspendApp_EventThread`)와 다른 TID에서 실행됐다.
 - 시드: `FDateTime::Now().GetTicks()`를 int32로 줄여 쓴다 [AI 판단].
 - `CustomerLookImages`가 비어 있으면 외형을 고를 수 없으므로 BeginPlay에서 `checkf`로 멈춘다(반드시 있어야 하는 참조, CLAUDE.md 93행).
 - Default Pawn은 BP_BusinessGameMode에서 None으로 둔다(C++ 생성자 없음).
@@ -1259,6 +1259,7 @@ sequenceDiagram
 | F3 | 도착 즉시 산 손님은 화면 줄에 나타나지 않는다 | 로직 변경 없음. 진열 칸 반짝임 같은 판매 연출은 위젯 선택 사항(Could) [AI 판단] |
 - 추적표: 빈칸 없음. 워크스루로 다시 확인한 규칙 R5 · R6 · R12 · R15~R17 · R19~R23 · R25 · R26 · R29 · R31 · R39 · R41~R44, T1.
 - 실기기 확인 항목 추가: 백그라운드 복귀 첫 프레임의 DeltaTime이 월드 시간에 더해지지 않는지(일시정지 상태라 더해지지 않아야 한다).
+  - T06(2026-11-23): 일시정지를 풀 수단("계속하기" 오버레이)이 없어 T19로 넘겼다. 확인한 것은 복귀 뒤 일시정지 상태에서 25초 동안 손님 이벤트가 없었다는 것(Days.csv 1일차 ArrivalMax보다 긴 시간) — 백그라운드 진입 때 월드 시간이 멈춘다.
 
 ## 5. 수치 초안 (5단계)
 - 값 · 산정 목표 · 근거 · 시뮬레이션 결과: **data-schema.md '수치 초안'**. 원본은 `Data/*.csv` 4개. 모든 값은 [초안].
