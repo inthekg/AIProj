@@ -931,6 +931,10 @@ public:
 	UFUNCTION(BlueprintPure)
 	double GetSteamerRefillEndTime() const { return Sim.GetSteamerRefillEndTime(); }
 
+	/** 다시 찌는 중 게이지의 분모(초). 진행 = 1 − (GetSteamerRefillEndTime − 현재 월드 시각) / 이 값 */
+	UFUNCTION(BlueprintPure)
+	float GetSteamerRegenTime() const { return Sim.GetInput().Steamer.RegenTime; }
+
 	/** 남은 시간 = 이 값 − 현재 월드 시각(Get Game Time in Seconds) */
 	UFUNCTION(BlueprintPure)
 	double GetDayEndTime() const { return Sim.GetDayEndTime(); }
@@ -989,10 +993,11 @@ private:
 | 손님 줄 (슬롯 5) | GM `GetWaitingCustomers`, `GetPatience`, BP_BusinessGameMode `CustomerLookImages`, BP_ShopGameInstance 재료 이미지 | GM `OnCustomersChanged` | — |
 | 진열대 (2 × 8) | GM `GetShelf`, GI `GetBalance`(MaxStockPerRecipe — 점 수), 재료 이미지 | GM `OnShelfChanged` | — |
 | 재료통 | GI `GetUnlockedIngredients`(베이스 · 과일), 재료통 이미지 | — | GM `TapIngredient` |
-| 작업대 · 찜기 | GM `GetWorkbenchRecipe` · `GetSteamerGauge` · `GetSteamerMaxGauge` · `GetSteamerRefillEndTime`, GI `GetBalance`(연출 시간) | GM `OnWorkbenchChanged` · `OnSteamerChanged` | GM `TapSteamer` · `TapDiscard` |
+| 작업대 · 찜기 | GM `GetWorkbenchRecipe` · `GetSteamerGauge` · `GetSteamerMaxGauge` · `GetSteamerRefillEndTime` · `GetSteamerRegenTime`, GI `GetBalance`(연출 시간) | GM `OnWorkbenchChanged` · `OnSteamerChanged` | GM `TapSteamer` · `TapDiscard` |
 | 결산 · 게임 오버 팝업 | (델리게이트 인자) 매출 · 재료비 · 임대료(Rent) · 순이익 = Sales − IngredientCost − Rent | GM `OnDayEnded` | `Open Level`(L_Lobby) |
 | 일시정지 오버레이 | — | GM `OnResumeRequired` | `Set Game Paused`(false) |
 - 진열대 행 위치(1.10), 손님 슬롯 갱신, 연출은 위젯(BP)이 한다. 로직은 위젯을 모른다.
+- 찜기 게이지(T16 사용자 결정): 평소에는 `GetSteamerGauge` ÷ `GetSteamerMaxGauge`, 다시 찌는 중(`GetSteamerRefillEndTime` > 0)에는 1 − (`GetSteamerRefillEndTime` − `Get Game Time in Seconds`) ÷ `GetSteamerRegenTime`을 위젯 Percent 바인딩이 매 프레임 계산한다(화면 전용 값). 찌는 중이라는 표시는 김(T_FX_Steam)이 맡고 채움 색은 바꾸지 않는다. 바인딩을 쓰므로 `Set Percent`는 부르지 않는다(UMG ProgressBar.cpp `SetPercent`가 바인딩을 고정값으로 덮는다).
 
 ### 3.9 엔진 API 목록 (엔진 소스에서 선언 확인, 경로는 `Engine/Source/` 기준)
 | API | 선언 위치 |

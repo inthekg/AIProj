@@ -75,6 +75,10 @@ public:
 	UFUNCTION(BlueprintPure)
 	double GetSteamerRefillEndTime() const { return Sim.GetSteamerRefillEndTime(); }
 
+	/** 다시 찌는 중 게이지의 분모(초). 진행 = 1 − (GetSteamerRefillEndTime − 현재 월드 시각) / 이 값 */
+	UFUNCTION(BlueprintPure)
+	float GetSteamerRegenTime() const { return Sim.GetInput().Steamer.RegenTime; }
+
 	/** 남은 시간 = 이 값 − 현재 월드 시각(Get Game Time in Seconds) */
 	UFUNCTION(BlueprintPure)
 	double GetDayEndTime() const { return Sim.GetDayEndTime(); }
