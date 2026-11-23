@@ -1019,6 +1019,7 @@ private:
 | `USaveGame` | Runtime/Engine/Classes/GameFramework/SaveGame.h 23 |
 | `UGameplayStatics::CreateSaveGameObject` · `SaveGameToSlot` · `DoesSaveGameExist` · `LoadGameFromSlot` | Runtime/Engine/Classes/Kismet/GameplayStatics.h 1125 · 1168 · 1176 · 1212 |
 | `UGameplayStatics::SetGamePaused` · `IsGamePaused` · `GetTimeSeconds` · `OpenLevel` | GameplayStatics.h 402 · 409 · 1240 · 341 |
+| (BP) `UGameplayStatics::OpenLevelBySoftObjectPtr` (Open Level (by Object Reference), 로비 영업 시작 버튼) | GameplayStatics.h 351 (T15) |
 | `FCoreDelegates::ApplicationWillEnterBackgroundDelegate` · `ApplicationHasEnteredForegroundDelegate` | Runtime/Core/Public/Misc/CoreDelegates.h 319 · 322 |
 | `FDateTime::Now` · `GetTicks` | Runtime/Core/Public/Misc/DateTime.h 683 · 404 |
 | `DECLARE_LOG_CATEGORY_EXTERN` · `DEFINE_LOG_CATEGORY` | Runtime/Core/Public/Logging/LogMacros.h 331 · 341 |
