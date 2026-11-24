@@ -6,7 +6,7 @@
 
 // 입력값은 리터럴로 쓰고 설계 문서 · 데이터에서 가져온 값에는 출처를 단다. 기대값도 리터럴 — 계산식으로 쓰면 구현과 같은 식을 되풀이한다
 
-// 하루 입력의 공통 부분. 입력: Data/Days.csv 1일차 · Steamer.csv 1레벨 · Balance.csv Default · Ingredients.csv 팥 행, 팥만 해금 · 찜기 1레벨(GDD 시작 조건), 외형 5종(GDD 손님)
+// 하루 입력의 공통 부분. 입력: Data/Days.csv 1일차(도착 간격만 다름 — 규칙 검사용 고정값 5.5~8.5) · Steamer.csv 1레벨 · Balance.csv Default · Ingredients.csv 팥 행, 팥만 해금 · 찜기 1레벨(GDD 시작 조건), 외형 5종(GDD 손님)
 // 이름을 모듈 안에서 겹치지 않게 둔다 — unity build에서 다른 테스트 파일과 한 번역 단위로 합쳐질 수 있다
 static FBusinessDayInput MakeSimDayInput()
 {
@@ -226,7 +226,7 @@ bool FBusinessSimCustomerArrivalIntervalTest::RunTest(const FString& Parameters)
 	TestEqual(TEXT("Queue capped at MaxQueue"), Sim.GetWaitingCustomers().Num(), 3);
 	TestTrue(TEXT("Arrivals continue after queue full"), ArrivalTimes.Num() > 3);
 
-	// 간격 기준: Days.csv 1일차 ArrivalMin 5.5 · ArrivalMax 8.5. 첫 간격은 StartDay 시각(0)부터
+	// 간격 기준: MakeSimDayInput의 ArrivalMin 5.5 · ArrivalMax 8.5. 첫 간격은 StartDay 시각(0)부터
 	double PrevTime = 0.0;
 	for (const double& Time : ArrivalTimes)
 	{
