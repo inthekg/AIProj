@@ -7,6 +7,9 @@ REM         (Saved/Logs/AIGame.log, 2026-11-17 13:06).
 REM Changed from the source: removed "-EditorIO -EditorIOPort=9885" (editor-only channel; no editor listens when run from cmd);
 REM                         -clientconfig comes from the first argument instead of fixed Development.
 REM If C++ changed, run Build.bat first: -skipbuildeditor does not rebuild the editor DLLs used for cooking.
+REM If NoDefaultCurrentDirectoryInExePath is set (e.g. by an AI agent shell), cmd does not run files from the current folder,
+REM and the Gradle task ueAFSProjectAssemble* ("cmd /c gradlew.bat" in AFSProject) fails. Clear it (setlocal keeps this local).
+set NoDefaultCurrentDirectoryInExePath=
 set UE_ROOT=D:\UE_5.5
 for %%I in ("%~dp0..") do set "PROJECT=%%~fI\AIGame.uproject"
 REM Output folder: ProjectRoot\Archive (resolved to an absolute path at run time; ignored by git).

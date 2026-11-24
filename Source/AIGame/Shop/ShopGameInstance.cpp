@@ -49,6 +49,9 @@ void UShopGameInstance::Init()
 		checkf(Row, TEXT("Days: rows must be named 1..%d without gaps (missing %d)"), DayRowCount, DayNumber);
 		checkf(Row->MaxQueue >= 1 && Row->MaxQueue <= QueueSlotCount,
 			TEXT("Days %d: MaxQueue (%d) must be 1..%d"), DayNumber, Row->MaxQueue, QueueSlotCount);
+		// 간격이 0 이하가 될 수 있으면 FBusinessSim::ProcessDueEvents가 Now 이하 시각에 도착을 계속 다시 예약해 루프가 끝나지 않는다
+		checkf(Row->ArrivalMin > 0.f && Row->ArrivalMin <= Row->ArrivalMax,
+			TEXT("Days %d: ArrivalMin (%f) must be > 0 and <= ArrivalMax (%f)"), DayNumber, Row->ArrivalMin, Row->ArrivalMax);
 	}
 
 	//찜기 데이터 확인

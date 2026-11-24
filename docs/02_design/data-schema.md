@@ -80,7 +80,7 @@
 - 정확한 소유 클래스와 프로퍼티는 3단계에서 정한다.
 
 ## 데이터 검증
-- 앱 시작 때 한 번, 데이터가 들어오는 경계에서 검사한다(CLAUDE.md 66행): enum 값마다 Ingredients 행이 있는지, Days · Steamer 행 이름이 "1"부터 행 수까지 빠짐없는지(T03 사용자 결정 — `FillDayInput`의 min(Day, 행 수) 조회와 '최대 레벨 = 행 수'의 전제), Balance의 `Default` 행이 있는지, MaxQueue 1~5, Steamer 행마다 MaxGauge > 0 · RegenTime > 0(T12 사용자 결정 — MaxGauge가 0이면 하루 종일 찜기를 쓸 수 없다), UnlockOrder 0~6 빠짐 · 중복 없음, RentIncrease ≥ 0, BaseRent < StartGold, MaxStockPerRecipe ≥ 1(T13 사용자 결정 — 배분이 진열대 새 칸을 개수 1로 넣는 전제), 구매 비용 > 0(UnlockOrder ≥ 1의 UnlockCost, 레벨 2 이상의 UpgradeCost — `FShopProgress::TrySpend`의 전제, T02 사용자 결정).
+- 앱 시작 때 한 번, 데이터가 들어오는 경계에서 검사한다(CLAUDE.md 66행): enum 값마다 Ingredients 행이 있는지, Days · Steamer 행 이름이 "1"부터 행 수까지 빠짐없는지(T03 사용자 결정 — `FillDayInput`의 min(Day, 행 수) 조회와 '최대 레벨 = 행 수'의 전제), Balance의 `Default` 행이 있는지, MaxQueue 1~5, ArrivalMin > 0 · ArrivalMin ≤ ArrivalMax(블라인드 리뷰 반영 — 간격이 0 이하면 도착 이벤트 처리가 끝나지 않는다), Steamer 행마다 MaxGauge > 0 · RegenTime > 0(T12 사용자 결정 — MaxGauge가 0이면 하루 종일 찜기를 쓸 수 없다), UnlockOrder 0~6 빠짐 · 중복 없음, RentIncrease ≥ 0, BaseRent < StartGold, MaxStockPerRecipe ≥ 1(T13 사용자 결정 — 배분이 진열대 새 칸을 개수 1로 넣는 전제), 구매 비용 > 0(UnlockOrder ≥ 1의 UnlockCost, 레벨 2 이상의 UpgradeCost — `FShopProgress::TrySpend`의 전제, T02 사용자 결정).
 - 실패 처리: `checkf`로 멈춘다(architecture.md 3.5 `Init`). 메시지는 영어로 테이블 · 행 · 값을 적는다.
 
 
